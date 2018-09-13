@@ -1,0 +1,23 @@
+{
+    "name": "jciel/projeto_tcc",
+    "description": "Estudo",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jociel Souza",
+            "email": "jcielsouza@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.1",
+        "cboden/ratchet": "^0.4.1",
+        "firebase/php-jwt": "^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "require-dev": {
+    }
+}
