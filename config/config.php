@@ -12,6 +12,7 @@ return [
     ],
     'channels' => [
         \App\Channel\LoginChannel::class => \App\Channel\Factory\LoginChannelFactory::class,
-        \App\Channel\ExtruderChannel::class => \App\Channel\Factory\ExtruderChannelFactory::class
+        \App\Channel\ExtruderChannel::class => \App\Channel\Factory\ExtruderChannelFactory::class,
+        \App\Channel\AgglutinatorChannel::class => \App\Channel\Factory\AgglutinatorChannelFactory::class
     ],
 ];
