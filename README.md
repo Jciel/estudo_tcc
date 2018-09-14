@@ -2,7 +2,7 @@
 Estudo projeto TCC
 
 
-###### Login
+### Login
 Connect in URL ws://localhost:8080/login
 
 Return string json
@@ -29,7 +29,7 @@ or
 {"error": true, "message": "Senha incorreta", "token": null}
 ```
 
-###### Connecting in channel
+### Connecting in channel
 With the token connect to the channel URL by passing the token as a
 parameter. Ex:
 
