@@ -9,7 +9,6 @@ Return string json
 ```json
 {"error": false, "message": "Login opened"}
 ```
-Envie uma mensagem com os dados de login no padrão
 Send a message with login data in pattern
 ```json
 {"user": "username", "passwd": "password"}
