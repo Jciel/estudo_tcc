@@ -37,7 +37,7 @@ ws://localhost:8080/extruder?token=eyJ0eXAiOiJKV1QiLCJhbGciOi...
 
 If invalid token return string json
 ```json
-{"error": true, "message": "Invalid token", "token" => null}
+{"error": true, "message": "Invalid token", "token": null}
 ```
 
 If correct, the client is connected in channel
