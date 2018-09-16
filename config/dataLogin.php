@@ -25,9 +25,9 @@ return [
             'extrude'
         ]
     ],
-    'agglutinator' => [
-        'user' => 'agglutinator',
-        'passwd' => 'senhaagglutinator',
+    'aglutinador' => [
+        'user' => 'aglutinador',
+        'passwd' => 'senhaaglutinador',
         'type' => 'equipament',
         'routes' => [
             'agglutinator'

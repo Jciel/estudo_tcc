@@ -9,6 +9,13 @@ php server.php
 The file testClient.html used to realize some tests manually
 configuring the variable ``host`` in the code.
 
+For testing there are two users ``client`` (jociel and maria)
+and two users ``equipament`` (extrusora and aglutinador),
+configuring in file ``config\dataLogin.php``
+
+The system use two chanels, extruder and agglutinator for
+conections.
+
 ### Login
 Connect in URL ws://localhost:8080/login
 
@@ -36,6 +43,10 @@ or
 ```
 
 ### Connecting in channel
+###### Channels
+ws://localhost:8080/extruder  
+ws://localhost:8080/agglutinator
+
 With the token connect to the channel URL by passing the token as a
 parameter. Ex:
 
