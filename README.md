@@ -1,6 +1,13 @@
 # estudo_tcc
 Estudo projeto TCC
 
+To run the server just run the command in root directory
+```bash
+php server.php
+```
+
+The file testClient.html used to realize some tests manually
+configuring the variable ``host`` in the code.
 
 ### Login
 Connect in URL ws://localhost:8080/login
