@@ -69,7 +69,11 @@ class LoginChannel implements MessageComponentInterface, ChannelInterface
     public function onMessage(ConnectionInterface $conn, $msg): void
     {
         $result = $this->loginService->login($msg, $conn);
-        $conn->send(json_encode($result));
+        $conn->send(json_encode([
+            "error" => $result->isError(),
+            "message" => $result->getMessage(),
+            "token" => $result->getToken()
+        ]));
         $conn->close();
     }
 }

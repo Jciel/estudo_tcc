@@ -2,6 +2,9 @@
 
 namespace App\Service;
 
+use App\ObjectValue\ConnectionLoginData;
+use App\ObjectValue\Message;
+use App\ObjectValue\MessageInterface;
 use Ratchet\ConnectionInterface;
 
 /**
@@ -14,12 +17,12 @@ class LoginService implements ServiceInterface
      * @var array $loginConfig
      */
     private $loginConfig;
-    
+
     /**
      * @var string $jwtKey
      */
     private $jwtKey;
-    
+
     /**
      * @var JwtService $jwtService
      */
@@ -40,30 +43,22 @@ class LoginService implements ServiceInterface
     /**
      * @param string $msg
      * @param ConnectionInterface $conn
-     * @return array
+     * @return Message
      */
-    public function login(string $msg, ConnectionInterface $conn): array
+    public function login(string $msg, ConnectionInterface $conn): Message
     {
         $dataLogin = json_decode($msg, true);
-        
+
         if (!array_key_exists($dataLogin['user'], $this->loginConfig)) {
-            return [
-                'error' => true,
-                'message' => 'Usuário não existe',
-                'token' => null
-            ];
+            return new Message(true, 'Usuário não existe', null);
         }
-        
+
         $userLogin = $this->loginConfig[$dataLogin['user']];
-        
+
         if (!($dataLogin['passwd'] === $userLogin['passwd'])) {
-            return [
-                'error' => true,
-                'message' => 'Senha incorreta',
-                'token' => null
-            ];
+            return new Message(true, 'Usuário não existe', null);
         }
-        
+
         $options = [
             'expiration_sec' => 8600,
             'userdata' => [
@@ -72,37 +67,39 @@ class LoginService implements ServiceInterface
                 'routes' => $userLogin['routes'],
             ]
         ];
-        
-        $token = $this->jwtService->encode($options, $this->jwtKey);
 
-        return [
-            'error' => false,
-            'message' => 'Valid',
-            'token' => $token
-        ];
+        $token = $this->jwtService->encode($options, $this->jwtKey);
+        return new Message(false, 'Valid', $token);
     }
 
     /**
      * @param string $token
-     * @return array
+     * @return MessageInterface
      */
-    public function checkLogin(string $token): array
+    public function checkLogin(string $token): MessageInterface
     {
         $token = $this->jwtService->decode($token, $this->jwtKey);
 
         $tokenData = array_map(function ($item) {
             return (is_object($item)) ? (array)$item : $item;
         }, $token);
-        
+
         if (empty($tokenData)) {
-            return [
-                'error' => true,
-                'message' => 'Invalid token',
-                'token' => null
-            ];
+            return new Message(true, 'Invalid token', null);
         }
 
         $tokenData['error'] = false;
-        return $tokenData;
+
+        return new ConnectionLoginData(
+            $tokenData['error'],
+            'Conected',
+            $tokenData['iat'],
+            $tokenData['exp'],
+            $tokenData['nbf'],
+            $tokenData['data']['user'],
+            $tokenData['data']['type'],
+            $tokenData['data']['routes'],
+            null
+        );
     }
 }

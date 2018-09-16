@@ -9,6 +9,14 @@ return [
             'extrude'
         ]
     ],
+    'maria' => [
+        'user' => 'maria',
+        'passwd' => 'senhamaria',
+        'type' => 'client',
+        'routes' => [
+            'extrude'
+        ]
+    ],
     'extrusora' => [
         'user' => 'extrusora',
         'passwd' => 'senhaextrusora',
