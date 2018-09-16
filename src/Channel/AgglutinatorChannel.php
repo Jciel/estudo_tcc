@@ -126,7 +126,7 @@ class AgglutinatorChannel implements MessageComponentInterface, ChannelInterface
     private function message(TokenDataInterface $tokenData, string $msg): Closure
     {
         if ($tokenData->isError()) {
-            return function (ConnectionInterface $conn) use ($tokenData) {
+            return function (ConnectionInterface $conn) use ($tokenData): void {
                 $conn->send(json_encode([
                     'error' => $tokenData->isError(),
                     'message' => $tokenData->getMessage(),
@@ -137,27 +137,35 @@ class AgglutinatorChannel implements MessageComponentInterface, ChannelInterface
         }
         
         if ($tokenData->isClient() && empty($this->extruderConnection)) {
-            return function (ConnectionInterface $conn) {
+            return function (ConnectionInterface $conn): void {
                 $conn->send('{"error": true, "message": "Equipament disconected", "token": null}');
             };
         }
 
         if ($tokenData->isEquipament() && empty($this->clients->count())) {
-            return function (ConnectionInterface $conn) {
+            return function (ConnectionInterface $conn): void {
                 $conn->send('{"error": true, "message": "Client disconected", "token": null}');
             };
         }
 
         if ($tokenData->isClient()) {
-            return function (ConnectionInterface $conn) use ($msg) {
-                $this->agglutinatorConnection->send($msg);
+            return function (ConnectionInterface $conn) use ($msg): void {
+                $this->agglutinatorConnection->send(json_encode([
+                    'error' => false,
+                    'message' => $msg,
+                    'token' => null
+                ]));
             };
         }
 
         if ($tokenData->isEquipament()) {
-            return function (ConnectionInterface $conn) use ($msg) {
+            return function (ConnectionInterface $conn) use ($msg): void {
                 foreach ($this->clients as $client) {
-                    $client->send($msg);
+                    $client->send(json_encode([
+                        'error' => false,
+                        'message' => $msg,
+                        'token' => null
+                    ]));
                 }
             };
         }
