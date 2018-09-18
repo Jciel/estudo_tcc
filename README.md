@@ -1,5 +1,6 @@
 # estudo_tcc
-Estudo projeto TCC
+Estudo projeto TCC  
+Sistema de comunicação via WebSockets
 
 To run the server just run the command in root directory
 ```bash
