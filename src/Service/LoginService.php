@@ -43,9 +43,9 @@ class LoginService implements ServiceInterface
     /**
      * @param string $msg
      * @param ConnectionInterface $conn
-     * @return Message
+     * @return MessageInterface
      */
-    public function login(string $msg, ConnectionInterface $conn): Message
+    public function login(string $msg, ConnectionInterface $conn): MessageInterface
     {
         $dataLogin = json_decode($msg, true);
 
@@ -56,7 +56,7 @@ class LoginService implements ServiceInterface
         $userLogin = $this->loginConfig[$dataLogin['user']];
 
         if (!($dataLogin['passwd'] === $userLogin['passwd'])) {
-            return new Message(true, 'Usuário não existe', null);
+            return new Message(true, 'Senha incorreta', null);
         }
 
         $options = [

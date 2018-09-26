@@ -3,6 +3,7 @@
 namespace App\Channel;
 
 use App\Service\LoginService;
+use App\Service\MessagesService;
 use App\Service\ServiceInterface;
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
@@ -32,10 +33,7 @@ class LoginChannel implements MessageComponentInterface, ChannelInterface
      */
     public function onOpen(ConnectionInterface $conn): void
     {
-        $conn->send(json_encode([
-            'error' => false,
-            'message' => 'Login opened'
-        ]));
+        $conn->send(MessagesService::loginOpened());
     }
 
     /**
@@ -43,10 +41,7 @@ class LoginChannel implements MessageComponentInterface, ChannelInterface
      */
     public function onClose(ConnectionInterface $conn): void
     {
-        $conn->send(json_encode([
-            'error' => null,
-            'message' => 'Login closed'
-        ]));
+        $conn->send(MessagesService::loginClose());
     }
 
     /**
@@ -55,10 +50,7 @@ class LoginChannel implements MessageComponentInterface, ChannelInterface
      */
     public function onError(ConnectionInterface $conn, \Exception $e): void
     {
-        $conn->send(json_encode([
-            'error' => true,
-            'message' => $e->getMessage()
-        ]));
+        $conn->send(MessagesService::loginError($e));
         $conn->close();
     }
 
@@ -69,11 +61,7 @@ class LoginChannel implements MessageComponentInterface, ChannelInterface
     public function onMessage(ConnectionInterface $conn, $msg): void
     {
         $result = $this->loginService->login($msg, $conn);
-        $conn->send(json_encode([
-            "error" => $result->isError(),
-            "message" => $result->getMessage(),
-            "token" => $result->getToken()
-        ]));
+        $conn->send(MessagesService::errorMessage($result));
         $conn->close();
     }
 }

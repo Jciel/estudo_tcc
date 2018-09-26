@@ -6,7 +6,7 @@ namespace App\ObjectValue;
  * Class Message
  * @package App\ObjectValue
  */
-class Message implements MessageInterface
+final class Message implements MessageInterface
 {
     /**
      * @var bool
