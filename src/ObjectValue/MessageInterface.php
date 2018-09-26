@@ -12,7 +12,7 @@ interface MessageInterface
      * @return bool
      */
     public function isError(): bool;
-
+    
     /**
      * @return string
      */

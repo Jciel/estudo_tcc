@@ -6,7 +6,7 @@ namespace App\ObjectValue;
  * Class ConnectionLoginData
  * @package App\ObjectValue
  */
-class ConnectionLoginData implements MessageInterface, TokenDataInterface
+final class ConnectionLoginData implements MessageInterface, TokenDataInterface
 {
     /**
      * @var bool
@@ -146,7 +146,7 @@ class ConnectionLoginData implements MessageInterface, TokenDataInterface
     /**
      * @return bool
      */
-    public function isClient(): bool
+    public function isServer(): bool
     {
         return ($this->type === 'client') ? true : false;
     }

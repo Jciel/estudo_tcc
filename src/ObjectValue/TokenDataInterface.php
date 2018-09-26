@@ -31,7 +31,7 @@ interface TokenDataInterface
     /**
      * @return bool
      */
-    public function isClient(): bool;
+    public function isServer(): bool;
 
     /**
      * @return bool

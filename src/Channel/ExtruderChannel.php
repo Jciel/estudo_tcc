@@ -5,7 +5,10 @@ namespace App\Channel;
 use App\ObjectValue\ConnectionLoginData;
 use App\ObjectValue\Message;
 use App\ObjectValue\MessageInterface;
+use App\ObjectValue\TokenDataInterface;
 use App\Service\LoginService;
+use App\Service\Messages;
+use App\Service\MessagesService;
 use App\Service\ServiceInterface;
 use Closure;
 use Ratchet\ConnectionInterface;
@@ -31,9 +34,12 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     private $loginService;
 
     /**
-     * @var SplObjectStorage $connections
+     * @var ConnectionInterface $server
      */
-    protected $clients;
+    protected $server;
+    
+    /** @var array $messagesCache */
+    private $messagesCache = [];
 
     /**
      * ExtruderChannel constructor.
@@ -42,7 +48,6 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     public function __construct(ServiceInterface $loginService)
     {
         $this->loginService = $loginService;
-        $this->clients = new SplObjectStorage();
     }
 
     /**
@@ -52,21 +57,22 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     {
         $token = $this->getToken($conn->httpRequest);
 
-        /** @var ConnectionLoginData|Message $tokenData */
+        /** @var ConnectionLoginData|MessageInterface $tokenData */
         $tokenData = $this->loginService->checkLogin($token);
-
+        
         if ($tokenData->isError()) {
-            $conn->send(json_encode([
-                "error" => $tokenData->isError(),
-                "message" => $tokenData->getMessage(),
-                "token" => $tokenData->getToken()
-            ]));
+            $conn->send(MessagesService::errorMessage($tokenData));
             $conn->close();
             return;
         }
 
-        if ($tokenData->isClient()) {
-            $this->clients->attach($conn);
+        if ($tokenData->isServer()) {
+            $this->server = $conn;
+
+            array_walk($this->messagesCache, function ($msg) use ($conn) {
+                $conn->send($msg);
+            });
+            $this->messagesCache = [];
         }
 
         if ($tokenData->isEquipament()) {
@@ -89,8 +95,8 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
             return;
         }
 
-        if ($tokenData->isClient()) {
-            $this->clients->detach($conn);
+        if ($tokenData->isServer()) {
+            $this->server = null;
         }
 
         if ($tokenData->isEquipament()) {
@@ -115,59 +121,11 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     public function onMessage(ConnectionInterface $conn, $msg): void
     {
         $token = $this->getToken($conn->httpRequest);
-        /** @var MessageInterface|ConnectionLoginData $tokenData */
+        /** @var MessageInterface|TokenDataInterface $tokenData */
         $tokenData = $this->loginService->checkLogin($token);
         
         $sendMessage = $this->message($tokenData, $msg);
 
         $sendMessage($conn);
-    }
-
-    private function message(MessageInterface $tokenData, string $msg): Closure
-    {
-        if ($tokenData->isError()) {
-            return function (ConnectionInterface $conn) use ($tokenData) {
-                $conn->send(json_encode([
-                    'error' => $tokenData->isError(),
-                    'message' => $tokenData->getMessage(),
-                    'token' => $tokenData->getToken()
-                ]));
-                $conn->close();
-            };
-        }
-
-        if ($tokenData->isClient() && empty($this->extruderConnection)) {
-            return function (ConnectionInterface $conn) {
-                $conn->send('{"error": true, "message": "Equipament disconected", "token": null}');
-            };
-        }
-
-        if ($tokenData->isEquipament() && empty($this->clients->count())) {
-            return function (ConnectionInterface $conn) {
-                $conn->send('{"error": true, "message": "Client disconected", "token": null}');
-            };
-        }
-
-        if ($tokenData->isClient()) {
-            return function (ConnectionInterface $conn) use ($msg) {
-                $this->extruderConnection->send(json_encode([
-                    'error' => false,
-                    'message' => $msg,
-                    'token' => null
-                ]));
-            };
-        }
-
-        if ($tokenData->isEquipament()) {
-            return function (ConnectionInterface $conn) use ($msg) {
-                foreach ($this->clients as $client) {
-                    $client->send(json_encode([
-                        'error' => false,
-                        'message' => $msg,
-                        'token' => null
-                    ]));
-                }
-            };
-        }
     }
 }
