@@ -11,7 +11,8 @@
     "require": {
         "php": ">=7.1",
         "cboden/ratchet": "^0.4.1",
-        "firebase/php-jwt": "^5.0"
+        "firebase/php-jwt": "^5.0",
+        "ratchet/pawl": "^0.3.2"
     },
     "autoload": {
         "psr-4": {

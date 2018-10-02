@@ -8,7 +8,10 @@ return [
     
     'services' => [
         \App\Service\LoginService::class => \App\Service\Factory\LoginServiceFactory::class,
-        \App\Service\JwtService::class => \App\Service\Factory\JwtServiceFactory::class
+        \App\Service\JwtService::class => \App\Service\Factory\JwtServiceFactory::class,
+        
+        // WsClient
+        \App\WsClient\WsClient::class => \App\WsClient\Factory\WsClientFactory::class
     ],
     'channels' => [
         \App\Channel\LoginChannel::class => \App\Channel\Factory\LoginChannelFactory::class,

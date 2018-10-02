@@ -6,6 +6,7 @@ use App\Channel\ChannelInterface;
 use App\Channel\ExtruderChannel;
 use App\Service\LoginService;
 use App\ServiceManagerInterface;
+use App\WsClient\WsClient;
 
 /**
  * Class ExtruderChannelFactory
@@ -22,6 +23,8 @@ class ExtruderChannelFactory
         /** @var LoginService $loginService */
         $loginService = $serviceManager->get(LoginService::class);
         
-        return new ExtruderChannel($loginService);
+        $clientServer = $serviceManager->get(WsClient::class);
+        
+        return new ExtruderChannel($loginService, $clientServer);
     }
 }
