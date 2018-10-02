@@ -146,9 +146,9 @@ final class ConnectionLoginData implements MessageInterface, TokenDataInterface
     /**
      * @return bool
      */
-    public function isServer(): bool
+    public function notIsEquipment(): bool
     {
-        return ($this->type === 'client') ? true : false;
+        return !($this->type === 'equipament');
     }
 
     /**
@@ -156,7 +156,7 @@ final class ConnectionLoginData implements MessageInterface, TokenDataInterface
      */
     public function isEquipament(): bool
     {
-        return ($this->type === 'equipament') ? true : false;
+        return ($this->type === 'equipament');
     }
 
     /**

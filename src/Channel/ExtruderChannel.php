@@ -10,9 +10,12 @@ use App\Service\LoginService;
 use App\Service\Messages;
 use App\Service\MessagesService;
 use App\Service\ServiceInterface;
+use App\WsClient\WsClient;
 use Closure;
+use Ratchet\Client\Connector;
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
+use React\Promise\PromiseInterface;
 use SplObjectStorage;
 
 /**
@@ -34,9 +37,9 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     private $loginService;
 
     /**
-     * @var ConnectionInterface $server
+     * @var WsClient $clientServer
      */
-    protected $server;
+    private $clientServer;
     
     /** @var array $messagesCache */
     private $messagesCache = [];
@@ -45,9 +48,10 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
      * ExtruderChannel constructor.
      * @param ServiceInterface $loginService
      */
-    public function __construct(ServiceInterface $loginService)
+    public function __construct(ServiceInterface $loginService, WsClient $clientServer)
     {
         $this->loginService = $loginService;
+        $this->clientServer = $clientServer;
     }
 
     /**
@@ -65,19 +69,20 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
             $conn->close();
             return;
         }
-
-        if ($tokenData->isServer()) {
-            $this->server = $conn;
-
-            array_walk($this->messagesCache, function ($msg) use ($conn) {
-                $conn->send($msg);
-            });
-            $this->messagesCache = [];
+        
+        if ($tokenData->notIsEquipment()) {
+            echo "não é equipamento valido";
+            $conn->close();
+            return;
         }
 
-        if ($tokenData->isEquipament()) {
-            $this->extruderConnection = $conn;
-        }
+        $this->extruderConnection = $conn;
+
+        /** @var PromiseInterface $connector */
+        $connector = $this->clientServer->connect();
+        
+        var_dump($connector->then());
+        exit;
     }
 
     /**
