@@ -46,7 +46,7 @@ trait ChannelTrait
             };
         }
 
-        if ($tokenData->isEquipament() && empty($this->server)) {
+        if ($tokenData->isEquipament() && empty($this->clientServer)) {
             return function (ConnectionInterface $conn) use ($msg) {
                 array_push($this->messagesCache, $msg);
                 $conn->send(MessagesService::serverDiconected());
@@ -61,7 +61,7 @@ trait ChannelTrait
 
         if ($tokenData->isEquipament()) {
             return function (ConnectionInterface $conn) use ($msg) {
-                $this->server->send(MessagesService::message($msg));
+                $this->clientServer->send(MessagesService::message($msg));
             };
         }
     }

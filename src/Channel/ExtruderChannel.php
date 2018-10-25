@@ -2,21 +2,17 @@
 
 namespace App\Channel;
 
-use App\ObjectValue\ConnectionLoginData;
-use App\ObjectValue\Message;
-use App\ObjectValue\MessageInterface;
-use App\ObjectValue\TokenDataInterface;
+use App\Command\ActionCommand;
+use App\Command\CommandConnectionInterface;
+use App\Command\CommandErrorInterface;
+use App\Command\CommandInterface;
+use App\Command\ErrorCommand;
+use App\Command\SetupCommand;
 use App\Service\LoginService;
-use App\Service\Messages;
 use App\Service\MessagesService;
 use App\Service\ServiceInterface;
-use App\WsClient\WsClient;
-use Closure;
-use Ratchet\Client\Connector;
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
-use React\Promise\PromiseInterface;
-use SplObjectStorage;
 
 /**
  * Class ExtruderChannel
@@ -32,26 +28,31 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     protected $extruderConnection;
 
     /**
-     * @var LoginService $loginService
-     */
-    private $loginService;
-
-    /**
-     * @var WsClient $clientServer
+     * @var ConnectionInterface $clientServer
      */
     private $clientServer;
     
-    /** @var array $messagesCache */
-    private $messagesCache = [];
-
+    /**
+     * @var LoginService $loginService
+     */
+    private $loginService;
+    
+    /**
+     * @var MessagesService $messageService
+     */
+    private $messageService;
+    
+    private $reflections = [];
+    
     /**
      * ExtruderChannel constructor.
      * @param ServiceInterface $loginService
+     * @param MessagesService $messageService
      */
-    public function __construct(ServiceInterface $loginService, WsClient $clientServer)
+    public function __construct(ServiceInterface $loginService, MessagesService $messageService)
     {
         $this->loginService = $loginService;
-        $this->clientServer = $clientServer;
+        $this->messageService = $messageService;
     }
 
     /**
@@ -61,28 +62,22 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     {
         $token = $this->getToken($conn->httpRequest);
 
-        /** @var ConnectionLoginData|MessageInterface $tokenData */
+        /** @var CommandErrorInterface|CommandConnectionInterface $tokenData */
         $tokenData = $this->loginService->checkLogin($token);
         
-        if ($tokenData->isError()) {
-            $conn->send(MessagesService::errorMessage($tokenData));
+        if ($tokenData instanceof ErrorCommand) {
+            $tokenData->execute($conn);
             $conn->close();
             return;
         }
         
-        if ($tokenData->notIsEquipment()) {
-            echo "não é equipamento valido";
-            $conn->close();
-            return;
+        if ($tokenData->isServer()) {
+            $this->clientServer = $conn;
         }
-
-        $this->extruderConnection = $conn;
-
-        /** @var PromiseInterface $connector */
-        $connector = $this->clientServer->connect();
         
-        var_dump($connector->then());
-        exit;
+        if ($tokenData->isEquipament()) {
+            $this->extruderConnection = $conn;
+        }
     }
 
     /**
@@ -91,12 +86,13 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     public function onClose(ConnectionInterface $conn): void
     {
         $token = $this->getToken($conn->httpRequest);
-        /** @var ConnectionLoginData $tokenData */
+
+        /** @var CommandErrorInterface|CommandConnectionInterface $tokenData */
         $tokenData = $this->loginService->checkLogin($token);
 
         echo "Connection closed\n";
 
-        if ($tokenData->isError()) {
+        if ($tokenData instanceof ErrorCommand) {
             return;
         }
 
@@ -126,11 +122,52 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     public function onMessage(ConnectionInterface $conn, $msg): void
     {
         $token = $this->getToken($conn->httpRequest);
-        /** @var MessageInterface|TokenDataInterface $tokenData */
-        $tokenData = $this->loginService->checkLogin($token);
-        
-        $sendMessage = $this->message($tokenData, $msg);
 
-        $sendMessage($conn);
+        /** @var CommandErrorInterface|CommandConnectionInterface $checkLoginCommand */
+        $checkLoginCommand = $this->loginService->checkLogin($token);
+        
+        if ($checkLoginCommand instanceof ErrorCommand) {
+            $checkLoginCommand->execute($conn);
+            return;
+        }
+        
+        /** @var CommandInterface[] $commands */
+        $commands = $this->messageService->parseMessage($msg);
+        
+        /** @var SetupCommand[] $setupCommands */
+        $setupCommands = $commands['setupCommands'];
+        foreach ($setupCommands as $setupCommand) {
+            if ($checkLoginCommand->isServer()) {
+                $setupCommand->execute($this->extruderConnection);
+            }
+        }
+
+        /** @var ActionCommand[] $actionCommands */
+        $actionCommands = $commands['actionCommands'];
+        
+       
+        
+        foreach ($actionCommands as $actionCommand) {
+            if ($checkLoginCommand->isServer()) {
+                $reflection = $actionCommand->execute($this->extruderConnection);
+                
+                $reflection($this->reflections);
+                
+                var_dump($this->reflections);
+                exit;
+            }
+        }
+        
+        
+        var_dump("ssssssss");
+        exit;
+        
+        
+        
+        
+        
+//        $sendMessage = $this->message($tokenData, $msg);
+
+//        $sendMessage($conn);
     }
 }

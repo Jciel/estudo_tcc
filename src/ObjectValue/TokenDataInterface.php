@@ -31,7 +31,7 @@ interface TokenDataInterface
     /**
      * @return bool
      */
-    public function notIsEquipment(): bool;
+    public function isServer(): bool;
 
     /**
      * @return bool

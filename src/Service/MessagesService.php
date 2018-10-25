@@ -1,15 +1,97 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Command\ActionCommand;
+use App\Command\PinType\AnalogicPin;
+use App\Command\PinType\DigitalPin;
+use App\Command\PinType\Factory\PinFactory;
+use App\Command\SetupCommand;
 use App\ObjectValue\MessageInterface;
+use Ratchet\ConnectionInterface;
 
 /**
  * Class Messages
  * @package App\Service
  */
-class MessagesService
+class MessagesService implements ServiceInterface
 {
+    public function isDigitalPin(string $type): bool
+    {
+        return ($type == 'digital');
+    }
+
+    public function parseMessage(string $msg): array
+    {
+        $msgArray = json_decode($msg, true);
+        $commands = [];
+        $setupCommands = [];
+
+        if (array_key_exists('setup', $msgArray)) {
+            $setupCommands = array_map(function ($setupCommand) {
+                $pin = $this->isDigitalPin($setupCommand['type'])
+                    ? new DigitalPin($setupCommand['pino'])
+                    : new AnalogicPin($setupCommand['pino']);
+
+                return new SetupCommand($pin, $setupCommand['acao']);
+            }, $msgArray['setup']);
+        }
+        
+        $commands['setupCommands'] = $setupCommands;
+
+        
+        if (array_key_exists('acoes', $msgArray)) {
+            
+            $actionsCommands = array_map(function ($actionCommand) {
+                $pin = PinFactory::create($actionCommand['type'], $actionCommand['pino']);
+                
+                
+                if (empty($actionCommand['reflexo'])) {
+                    return new ActionCommand($pin, $actionCommand['acao']);
+                }
+                
+                $reflection = function (array &$reflections) use ($actionCommand) {
+                    $reflections[$actionCommand['reflexo']['pino']] = [
+                        'action' => $actionCommand['acao'],
+                        'alto' => 'HIGH',
+                        'baixo' => 'LOW'
+                    ];
+                };
+                
+                return new ActionCommand($pin, $actionCommand['acao'], $reflection);
+            }, $msgArray['acoes']);
+        }
+
+
+        $commands['actionCommands'] = $actionsCommands;
+
+
+        return $commands;
+        
+//        var_dump($msgArray);
+//        var_dump($msg);
+//        var_dump($commands);
+//        exit;
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+
     /**
      * @param MessageInterface $tokenData
      * @return string
@@ -36,7 +118,7 @@ class MessagesService
      */
     public static function serverDiconected()
     {
-        return '{"error": true, "message": "Client disconected", "token": null}';
+        return '{"error": true, "message": "Server disconected", "token": null}';
     }
 
     /**
@@ -51,23 +133,23 @@ class MessagesService
             'token' => null
         ]);
     }
-    
+
     public static function loginOpened(): string
     {
         return json_encode([
-            'error' => null,
+            'error' => false,
             'message' => 'Login opened'
         ]);
     }
-    
+
     public static function loginClose(): string
     {
-        json_encode([
+        return json_encode([
             'error' => null,
             'message' => 'Login closed'
         ]);
     }
-    
+
     public static function loginError(\Exception $e): string
     {
         return json_encode([

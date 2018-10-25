@@ -2,6 +2,11 @@
 
 namespace App\Service;
 
+use App\Command\CommandInterface;
+use App\Command\ConnectionCommand;
+use App\Command\ErrorCommand;
+use App\Command\Factory\CommandFactory;
+use App\Command\LogedInCommand;
 use App\ObjectValue\ConnectionLoginData;
 use App\ObjectValue\Message;
 use App\ObjectValue\MessageInterface;
@@ -39,28 +44,29 @@ class LoginService implements ServiceInterface
         $this->loginConfig = $config['login'];
         $this->jwtKey = $config['jwtKey'];
     }
-
-    /**
-     * @param string $msg
-     * @param ConnectionInterface $conn
-     * @return MessageInterface
-     */
-    public function login(string $msg, ConnectionInterface $conn): MessageInterface
+    
+    public function login(string $msg, ConnectionInterface $conn): CommandInterface
     {
         $dataLogin = json_decode($msg, true);
 
         if (!array_key_exists($dataLogin['user'], $this->loginConfig)) {
-            return new Message(true, 'Usuário não existe', null);
+            return CommandFactory::create(
+                ErrorCommand::class,
+                ["message" => "Usuário não existe", "token" => null]
+            );
         }
 
         $userLogin = $this->loginConfig[$dataLogin['user']];
 
         if (!($dataLogin['passwd'] === $userLogin['passwd'])) {
-            return new Message(true, 'Senha incorreta', null);
+            return CommandFactory::create(
+                ErrorCommand::class,
+                ["message" => "Senha incorreta", "token" => null]
+            );
         }
 
         $options = [
-            'expiration_sec' => 8600,
+            'expiration_sec' => 99999999999999,
             'userdata' => [
                 'user' => $userLogin['user'],
                 'type' => $userLogin['type'],
@@ -69,37 +75,33 @@ class LoginService implements ServiceInterface
         ];
 
         $token = $this->jwtService->encode($options, $this->jwtKey);
-        return new Message(false, 'Valid', $token);
+        return CommandFactory::create(LogedInCommand::class, ["token" => $token]);
     }
 
-    /**
-     * @param string $token
-     * @return MessageInterface
-     */
-    public function checkLogin(string $token): MessageInterface
+    
+    public function checkLogin(string $token): CommandInterface
     {
-        $token = $this->jwtService->decode($token, $this->jwtKey);
+        $tokens = $this->jwtService->decode($token, $this->jwtKey);
 
         $tokenData = array_map(function ($item) {
             return (is_object($item)) ? (array)$item : $item;
-        }, $token);
+        }, $tokens);
 
         if (empty($tokenData)) {
-            return new Message(true, 'Invalid token', null);
+            return CommandFactory::create(
+                ErrorCommand::class,
+                ["message" => "Invalid token", "token" => null]
+            );
         }
-
-        $tokenData['error'] = false;
-
-        return new ConnectionLoginData(
-            $tokenData['error'],
+        
+        return new ConnectionCommand(
             'Conected',
             $tokenData['iat'],
             $tokenData['exp'],
             $tokenData['nbf'],
             $tokenData['data']['user'],
             $tokenData['data']['type'],
-            $tokenData['data']['routes'],
-            null
+            $tokenData['data']['routes']
         );
     }
 }

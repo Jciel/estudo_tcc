@@ -1,18 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace App\ObjectValue;
+namespace App\Command;
 
-/**
- * Class ConnectionLoginData
- * @package App\ObjectValue
- */
-final class ConnectionLoginData implements MessageInterface, TokenDataInterface
+use Ratchet\ConnectionInterface;
+
+class ConnectionCommand implements CommandInterface, CommandConnectionInterface
 {
-    /**
-     * @var bool
-     */
-    private $error;
-
     /**
      * @var string
      */
@@ -53,20 +46,7 @@ final class ConnectionLoginData implements MessageInterface, TokenDataInterface
      */
     private $token;
 
-    /**
-     * ConnectionLoginData constructor.
-     * @param bool $error
-     * @param string $message
-     * @param int $iat
-     * @param int $exp
-     * @param int $nbf
-     * @param string $user
-     * @param string $type
-     * @param array $routes
-     * @param null|string $token
-     */
     public function __construct(
-        bool $error,
         string $message,
         int $iat,
         int $exp,
@@ -74,9 +54,8 @@ final class ConnectionLoginData implements MessageInterface, TokenDataInterface
         string $user,
         string $type,
         array $routes,
-        ?string $token
+        ?string $token = null
     ) {
-        $this->error = $error;
         $this->message = $message;
         $this->iat = $iat;
         $this->exp = $exp;
@@ -85,14 +64,6 @@ final class ConnectionLoginData implements MessageInterface, TokenDataInterface
         $this->type = $type;
         $this->routes = $routes;
         $this->token = $token;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isError(): bool
-    {
-        return $this->error;
     }
 
     /**
@@ -165,5 +136,10 @@ final class ConnectionLoginData implements MessageInterface, TokenDataInterface
     public function getRoutes(): array
     {
         return $this->routes;
+    }
+
+    public function execute(ConnectionInterface $conn)
+    {
+        // TODO: Implement execute() method.
     }
 }
