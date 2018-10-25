@@ -5,6 +5,7 @@ namespace App\Channel\Factory;
 use App\Channel\ChannelInterface;
 use App\Channel\ExtruderChannel;
 use App\Service\LoginService;
+use App\Service\MessagesService;
 use App\ServiceManagerInterface;
 use App\WsClient\WsClient;
 
@@ -23,8 +24,8 @@ class ExtruderChannelFactory
         /** @var LoginService $loginService */
         $loginService = $serviceManager->get(LoginService::class);
         
-        $clientServer = $serviceManager->get(WsClient::class);
+        $messageService = $serviceManager->get(MessagesService::class);
         
-        return new ExtruderChannel($loginService, $clientServer);
+        return new ExtruderChannel($loginService, $messageService);
     }
 }

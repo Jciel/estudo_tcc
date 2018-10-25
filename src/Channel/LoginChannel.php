@@ -2,6 +2,8 @@
 
 namespace App\Channel;
 
+use App\Command\Factory\CommandFactory;
+use App\Command\OpenedLogin;
 use App\Service\LoginService;
 use App\Service\MessagesService;
 use App\Service\ServiceInterface;
@@ -33,7 +35,8 @@ class LoginChannel implements MessageComponentInterface, ChannelInterface
      */
     public function onOpen(ConnectionInterface $conn): void
     {
-        $conn->send(MessagesService::loginOpened());
+        $openedLoginCommand = CommandFactory::create(OpenedLogin::class);
+        $openedLoginCommand->execute($conn);
     }
 
     /**
@@ -60,8 +63,8 @@ class LoginChannel implements MessageComponentInterface, ChannelInterface
      */
     public function onMessage(ConnectionInterface $conn, $msg): void
     {
-        $result = $this->loginService->login($msg, $conn);
-        $conn->send(MessagesService::errorMessage($result));
+        $logedInCommand = $this->loginService->login($msg, $conn);
+        $logedInCommand->execute($conn);
         $conn->close();
     }
 }
