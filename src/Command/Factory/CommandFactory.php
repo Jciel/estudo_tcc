@@ -16,7 +16,7 @@ class CommandFactory
         $commands = [
             OpenedLogin::class => new OpenedLogin(),
             LogedInCommand::class => new LogedInCommand($token ?? ""),
-            ErrorCommand::class => new ErrorCommand($message ?? "", $token ?? "")
+            ErrorCommand::class => new ErrorCommand($message ?? "", $token ?? ""),
         ];
         
         return $commands[$type];

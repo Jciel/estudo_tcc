@@ -6,6 +6,7 @@ use App\Command\ActionCommand;
 use App\Command\CommandConnectionInterface;
 use App\Command\CommandErrorInterface;
 use App\Command\CommandInterface;
+use App\Command\EquipamentCommand;
 use App\Command\ErrorCommand;
 use App\Command\SetupCommand;
 use App\Service\LoginService;
@@ -131,36 +132,37 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
             return;
         }
         
-        /** @var CommandInterface[] $commands */
-        $commands = $this->messageService->parseMessage($msg);
+        var_dump($checkLoginCommand->isServer());
         
-        /** @var SetupCommand[] $setupCommands */
-        $setupCommands = $commands['setupCommands'];
-        foreach ($setupCommands as $setupCommand) {
-            if ($checkLoginCommand->isServer()) {
+        
+        if ($checkLoginCommand->isServer()) {
+            /** @var CommandInterface[] $commands */
+            $commands = $this->messageService->parseServerMessage($msg);
+            
+            /** @var SetupCommand[] $setupCommands */
+            $setupCommands = $commands['setupCommands'];
+            foreach ($setupCommands as $setupCommand) {
                 $setupCommand->execute($this->extruderConnection);
             }
-        }
-
-        /** @var ActionCommand[] $actionCommands */
-        $actionCommands = $commands['actionCommands'];
-        
-       
-        
-        foreach ($actionCommands as $actionCommand) {
-            if ($checkLoginCommand->isServer()) {
+            
+            /** @var ActionCommand[] $actionCommands */
+            $actionCommands = $commands['actionCommands'];
+            foreach ($actionCommands as $actionCommand) {
                 $reflection = $actionCommand->execute($this->extruderConnection);
-                
                 $reflection($this->reflections);
-                
-                var_dump($this->reflections);
-                exit;
             }
         }
         
+        if ($checkLoginCommand->isEquipament()) {
+            /** @var EquipamentCommand $command */
+            $command = $this->messageService->parseEquipamentMessage($msg);
+            $reflectionCommand = $command->execute($this->clientServer);
+            /** @var ActionCommand $actionCommandReflection */
+            $actionCommandReflection = $reflectionCommand($this->reflections);
+            $actionCommandReflection->execute($this->extruderConnection);
+        }
         
-        var_dump("ssssssss");
-        exit;
+        
         
         
         

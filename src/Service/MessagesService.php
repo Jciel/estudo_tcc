@@ -3,6 +3,8 @@
 namespace App\Service;
 
 use App\Command\ActionCommand;
+use App\Command\CommandInterface;
+use App\Command\EquipamentCommand;
 use App\Command\PinType\AnalogicPin;
 use App\Command\PinType\DigitalPin;
 use App\Command\PinType\Factory\PinFactory;
@@ -21,60 +23,87 @@ class MessagesService implements ServiceInterface
         return ($type == 'digital');
     }
 
-    public function parseMessage(string $msg): array
+    public function parseServerMessage(string $msg): array
     {
         $msgArray = json_decode($msg, true);
+        
         $commands = [];
+        
         $setupCommands = [];
-
         if (array_key_exists('setup', $msgArray)) {
             $setupCommands = array_map(function ($setupCommand) {
-                $pin = $this->isDigitalPin($setupCommand['type'])
-                    ? new DigitalPin($setupCommand['pino'])
-                    : new AnalogicPin($setupCommand['pino']);
-
+                
+                $pin = PinFactory::create($setupCommand['type'], $setupCommand['pino']);
+                
+                if ($setupCommand['acao'] === 'TEMP') {
+                    $pin = PinFactory::create('temp', $setupCommand['pino']);
+                }
+                
                 return new SetupCommand($pin, $setupCommand['acao']);
             }, $msgArray['setup']);
         }
-        
         $commands['setupCommands'] = $setupCommands;
 
-        
+        $actionsCommands = [];
         if (array_key_exists('acoes', $msgArray)) {
-            
             $actionsCommands = array_map(function ($actionCommand) {
-                $pin = PinFactory::create($actionCommand['type'], $actionCommand['pino']);
+                $pin = PinFactory::create($actionCommand['type'], $actionCommand['pino'], 'write');
                 
-                
-                if (empty($actionCommand['reflexo'])) {
-                    return new ActionCommand($pin, $actionCommand['acao']);
-                }
-                
-                $reflection = function (array &$reflections) use ($actionCommand) {
-                    $reflections[$actionCommand['reflexo']['pino']] = [
-                        'action' => $actionCommand['acao'],
-                        'alto' => 'HIGH',
-                        'baixo' => 'LOW'
-                    ];
-                };
-                
-                return new ActionCommand($pin, $actionCommand['acao'], $reflection);
+                return (empty($actionCommand['reflexo']))
+                    ? new ActionCommand(
+                        $pin,
+                        $actionCommand['acao'],
+                        function (array &$reflections) {
+                        }
+                    )
+                    : new ActionCommand(
+                        $pin,
+                        $actionCommand['acao'],
+                        function (array &$reflections) use ($actionCommand): void {
+                            $reflections[$actionCommand['reflexo']['pino']] = [
+                                'pin' => PinFactory::create('digital', (int)$actionCommand['pino'], 'write'),
+                                'action' => $actionCommand['acao'],
+                                'alto' => 'HIGH',
+                                'baixo' => 'LOW'
+                            ];
+                        }
+                    );
             }, $msgArray['acoes']);
         }
-
-
         $commands['actionCommands'] = $actionsCommands;
-
-
-        return $commands;
         
-//        var_dump($msgArray);
-//        var_dump($msg);
-//        var_dump($commands);
-//        exit;
+        return $commands;
     }
-    
-    
+
+    public function parseEquipamentMessage(string $msg): CommandInterface
+    {
+        $equipamentMessageArray = explode('/', preg_replace("/[\/]+/", '/', $msg));
+        
+        $pin = (int)$equipamentMessageArray[2];
+        $value = (int)$equipamentMessageArray[3];
+        
+        return new EquipamentCommand(
+            PinFactory::create('digital', $pin, 'write'),
+            $value,
+            function ($reflections) use ($pin, $value): CommandInterface {
+                if (!array_key_exists($pin, $reflections)) {
+                    return new class implements CommandInterface {
+                        public function execute(ConnectionInterface $conn)
+                        {
+                        }
+                    };
+                }
+                
+                if ($value > $reflections[$pin]['action']) {
+                    return new ActionCommand($reflections[$pin]['pin'], $reflections[$pin]['baixo']);
+                }
+                
+                if ($value < $reflections[$pin]['action']) {
+                    return new ActionCommand($reflections[$pin]['pin'], $reflections[$pin]['alto']);
+                }
+            }
+        );
+    }
     
     
     

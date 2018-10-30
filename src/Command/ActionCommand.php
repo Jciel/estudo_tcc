@@ -26,8 +26,13 @@ class ActionCommand implements CommandInterface
     }
 
 
-    public function execute(ConnectionInterface $conn): Closure
+    public function execute(ConnectionInterface $conn): ?Closure
     {
+        $type = $this->pin->getStrType();
+        $pin = $this->pin->getPin();
+        $power = ($this->action === 'HIGH') ? 1 : 0;
+        $conn->send("alp://$type/$pin/$power");
+        
         return $this->reflection;
     }
 }

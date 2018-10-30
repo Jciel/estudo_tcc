@@ -25,7 +25,6 @@ class SetupCommand implements CommandInterface
         $this->action = $action;
     }
     
-    
     public function execute(ConnectionInterface $conn)
     {
         if ($this->action === "OUTPUT") {
@@ -34,6 +33,6 @@ class SetupCommand implements CommandInterface
         
         $type = $this->pin->getStrType();
         $pin = $this->pin->getPin();
-        $conn->send("alp://${$type}/${$pin}");
+        $conn->send("alp://$type/$pin");
     }
 }

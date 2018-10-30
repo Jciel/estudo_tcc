@@ -5,16 +5,24 @@ namespace App\Command\PinType\Factory;
 use App\Command\PinType\AnalogicPin;
 use App\Command\PinType\DigitalPin;
 use App\Command\PinType\PinInterface;
+use App\Command\PinType\TemperaturePin;
 
 class PinFactory
 {
-    public static function create(string $type, int $pin): PinInterface
+    public static function create(string $type, int $pin, string $function = 'read'): PinInterface
     {
         $pinTypes = [
-            'digital' => new DigitalPin($pin),
-            'analogic' => new AnalogicPin($pin)
+            'digital' => function () use ($pin, $function) {
+                return new DigitalPin($pin, $function);
+            },
+            'analogic' => function () use ($pin, $function) {
+                return new AnalogicPin($pin, $function);
+            },
+            'temp' => function (int $pin) {
+                return new TemperaturePin($pin);
+            },
         ];
         
-        return $pinTypes[$type];
+        return $pinTypes[$type]($pin);
     }
 }
