@@ -6,9 +6,12 @@ class DigitalPin implements PinInterface, DigitalPinInterface
 {
     private $pin;
     
-    public function __construct(int $pin)
+    private $function;
+    
+    public function __construct(int $pin, string $function = 'read')
     {
         $this->pin = $pin;
+        $this->function = $function;
     }
 
     public function getPin(): int
@@ -18,6 +21,6 @@ class DigitalPin implements PinInterface, DigitalPinInterface
     
     public function getStrType(): string
     {
-        return 'srld';
+        return ($this->function === 'write') ? 'ppsw' : 'srld';
     }
 }
