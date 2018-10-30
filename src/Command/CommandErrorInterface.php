@@ -2,6 +2,10 @@
 
 namespace App\Command;
 
+/**
+ * Interface CommandErrorInterface
+ * @package App\Command
+ */
 interface CommandErrorInterface
 {
 

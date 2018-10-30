@@ -4,6 +4,10 @@ namespace App\Command;
 
 use Ratchet\ConnectionInterface;
 
+/**
+ * Class ErrorCommand
+ * @package App\Command
+ */
 class ErrorCommand implements CommandErrorInterface, CommandInterface
 {
     /**
@@ -20,14 +24,23 @@ class ErrorCommand implements CommandErrorInterface, CommandInterface
      * @var string|null $token
      */
     private $token = null;
-    
+
+    /**
+     * ErrorCommand constructor.
+     * @param string $message
+     * @param null|string $token
+     */
     public function __construct(string $message, ?string $token = null)
     {
         $this->message = $message;
         $this->token = $token;
     }
 
-    public function execute(ConnectionInterface $conn)
+    /**
+     * @param ConnectionInterface $conn
+     * @return void
+     */
+    public function execute(ConnectionInterface $conn): void
     {
         $conn->send(json_encode([
             "error" => $this->error,

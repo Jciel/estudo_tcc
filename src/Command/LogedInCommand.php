@@ -4,19 +4,30 @@ namespace App\Command;
 
 use Ratchet\ConnectionInterface;
 
+/**
+ * Class LogedInCommand
+ * @package App\Command
+ */
 class LogedInCommand implements CommandInterface
 {
     /**
      * @var string $token
      */
     private $toekn;
-    
+
+    /**
+     * LogedInCommand constructor.
+     * @param string $token
+     */
     public function __construct(string $token = "")
     {
         $this->toekn = $token;
     }
 
-    public function execute(ConnectionInterface $conn)
+    /**
+     * @param ConnectionInterface $conn
+     */
+    public function execute(ConnectionInterface $conn): void
     {
         $conn->send(json_encode([
             "error" => false,

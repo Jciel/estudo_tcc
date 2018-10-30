@@ -21,7 +21,7 @@ class AgglutinatorChannel implements MessageComponentInterface, ChannelInterface
     use ChannelTrait;
 
     /**
-     * @var ConnectionInterface $extruderConnection
+     * @var ConnectionInterface $agglutinatorConnection
      */
     protected $agglutinatorConnection;
 

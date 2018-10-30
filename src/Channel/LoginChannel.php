@@ -2,7 +2,9 @@
 
 namespace App\Channel;
 
+use App\Command\ErrorCommand;
 use App\Command\Factory\CommandFactory;
+use App\Command\LoginCloseCommand;
 use App\Command\OpenedLogin;
 use App\Service\LoginService;
 use App\Service\MessagesService;
@@ -44,7 +46,8 @@ class LoginChannel implements MessageComponentInterface, ChannelInterface
      */
     public function onClose(ConnectionInterface $conn): void
     {
-        $conn->send(MessagesService::loginClose());
+        $loginCloseCommand = CommandFactory::create(LoginCloseCommand::class);
+        $loginCloseCommand->execute($conn);
     }
 
     /**
@@ -53,7 +56,11 @@ class LoginChannel implements MessageComponentInterface, ChannelInterface
      */
     public function onError(ConnectionInterface $conn, \Exception $e): void
     {
-        $conn->send(MessagesService::loginError($e));
+        $errorCommand = CommandFactory::create(
+            ErrorCommand::class,
+            ["message" => $e->getMessage(), "token" => null]
+        );
+        $errorCommand->execute($conn);
         $conn->close();
     }
 

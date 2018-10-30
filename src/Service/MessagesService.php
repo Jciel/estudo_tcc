@@ -5,24 +5,21 @@ namespace App\Service;
 use App\Command\ActionCommand;
 use App\Command\CommandInterface;
 use App\Command\EquipamentCommand;
-use App\Command\PinType\AnalogicPin;
-use App\Command\PinType\DigitalPin;
 use App\Command\PinType\Factory\PinFactory;
 use App\Command\SetupCommand;
 use App\ObjectValue\MessageInterface;
 use Ratchet\ConnectionInterface;
 
 /**
- * Class Messages
+ * Class MessagesService
  * @package App\Service
  */
 class MessagesService implements ServiceInterface
 {
-    public function isDigitalPin(string $type): bool
-    {
-        return ($type == 'digital');
-    }
-
+    /**
+     * @param string $msg
+     * @return CommandInterface[]
+     */
     public function parseServerMessage(string $msg): array
     {
         $msgArray = json_decode($msg, true);
@@ -75,6 +72,10 @@ class MessagesService implements ServiceInterface
         return $commands;
     }
 
+    /**
+     * @param string $msg
+     * @return CommandInterface
+     */
     public function parseEquipamentMessage(string $msg): CommandInterface
     {
         $equipamentMessageArray = explode('/', preg_replace("/[\/]+/", '/', $msg));
@@ -163,6 +164,9 @@ class MessagesService implements ServiceInterface
         ]);
     }
 
+    /**
+     * @return string
+     */
     public static function loginOpened(): string
     {
         return json_encode([
@@ -171,6 +175,9 @@ class MessagesService implements ServiceInterface
         ]);
     }
 
+    /**
+     * @return string
+     */
     public static function loginClose(): string
     {
         return json_encode([
@@ -179,6 +186,10 @@ class MessagesService implements ServiceInterface
         ]);
     }
 
+    /**
+     * @param \Exception $e
+     * @return string
+     */
     public static function loginError(\Exception $e): string
     {
         return json_encode([

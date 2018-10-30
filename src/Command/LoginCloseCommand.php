@@ -5,19 +5,20 @@ namespace App\Command;
 use Ratchet\ConnectionInterface;
 
 /**
- * Class OpenedLogin
+ * Class LoginCloseCommand
  * @package App\Command
  */
-class OpenedLogin implements CommandInterface
+class LoginCloseCommand implements CommandInterface
 {
+
     /**
      * @param ConnectionInterface $conn
      */
     public function execute(ConnectionInterface $conn): void
     {
         $conn->send(json_encode([
-            "error" => false,
-            "message" => "LoginOpened"
+            'error' => null,
+            'message' => 'Login closed'
         ]));
     }
 }

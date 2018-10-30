@@ -42,7 +42,10 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
      * @var MessagesService $messageService
      */
     private $messageService;
-    
+
+    /**
+     * @var array $reflections
+     */
     private $reflections = [];
     
     /**
@@ -132,9 +135,6 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
             return;
         }
         
-        var_dump($checkLoginCommand->isServer());
-        
-        
         if ($checkLoginCommand->isServer()) {
             /** @var CommandInterface[] $commands */
             $commands = $this->messageService->parseServerMessage($msg);
@@ -161,15 +161,5 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
             $actionCommandReflection = $reflectionCommand($this->reflections);
             $actionCommandReflection->execute($this->extruderConnection);
         }
-        
-        
-        
-        
-        
-        
-        
-//        $sendMessage = $this->message($tokenData, $msg);
-
-//        $sendMessage($conn);
     }
 }

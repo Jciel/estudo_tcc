@@ -44,7 +44,12 @@ class LoginService implements ServiceInterface
         $this->loginConfig = $config['login'];
         $this->jwtKey = $config['jwtKey'];
     }
-    
+
+    /**
+     * @param string $msg
+     * @param ConnectionInterface $conn
+     * @return CommandInterface
+     */
     public function login(string $msg, ConnectionInterface $conn): CommandInterface
     {
         $dataLogin = json_decode($msg, true);
@@ -78,7 +83,11 @@ class LoginService implements ServiceInterface
         return CommandFactory::create(LogedInCommand::class, ["token" => $token]);
     }
 
-    
+
+    /**
+     * @param string $token
+     * @return CommandInterface
+     */
     public function checkLogin(string $token): CommandInterface
     {
         $tokens = $this->jwtService->decode($token, $this->jwtKey);

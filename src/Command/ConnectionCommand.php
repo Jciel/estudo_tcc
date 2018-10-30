@@ -4,6 +4,10 @@ namespace App\Command;
 
 use Ratchet\ConnectionInterface;
 
+/**
+ * Class ConnectionCommand
+ * @package App\Command
+ */
 class ConnectionCommand implements CommandInterface, CommandConnectionInterface
 {
     /**
@@ -46,6 +50,17 @@ class ConnectionCommand implements CommandInterface, CommandConnectionInterface
      */
     private $token;
 
+    /**
+     * ConnectionCommand constructor.
+     * @param string $message
+     * @param int $iat
+     * @param int $exp
+     * @param int $nbf
+     * @param string $user
+     * @param string $type
+     * @param array $routes
+     * @param null|string $token
+     */
     public function __construct(
         string $message,
         int $iat,
@@ -138,6 +153,9 @@ class ConnectionCommand implements CommandInterface, CommandConnectionInterface
         return $this->routes;
     }
 
+    /**
+     * @param ConnectionInterface $conn
+     */
     public function execute(ConnectionInterface $conn)
     {
         // TODO: Implement execute() method.
