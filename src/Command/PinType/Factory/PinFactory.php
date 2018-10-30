@@ -7,15 +7,25 @@ use App\Command\PinType\DigitalPin;
 use App\Command\PinType\PinInterface;
 use App\Command\PinType\TemperaturePin;
 
+/**
+ * Class PinFactory
+ * @package App\Command\PinType\Factory
+ */
 class PinFactory
 {
+    /**
+     * @param string $type
+     * @param int $pin
+     * @param string $function
+     * @return PinInterface
+     */
     public static function create(string $type, int $pin, string $function = 'read'): PinInterface
     {
         $pinTypes = [
-            'digital' => function () use ($pin, $function) {
+            'digital' => function ($pin, $function) {
                 return new DigitalPin($pin, $function);
             },
-            'analogic' => function () use ($pin, $function) {
+            'analogic' => function ($pin, $function) {
                 return new AnalogicPin($pin, $function);
             },
             'temp' => function (int $pin) {
@@ -23,6 +33,6 @@ class PinFactory
             },
         ];
         
-        return $pinTypes[$type]($pin);
+        return $pinTypes[$type]($pin, $function);
     }
 }

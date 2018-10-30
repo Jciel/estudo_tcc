@@ -6,6 +6,10 @@ use App\Command\PinType\PinInterface;
 use Closure;
 use Ratchet\ConnectionInterface;
 
+/**
+ * Class EquipamentCommand
+ * @package App\Command
+ */
 class EquipamentCommand implements CommandInterface
 {
     /**
@@ -22,7 +26,13 @@ class EquipamentCommand implements CommandInterface
      * @var Closure
      */
     private $reflectionFunction;
-    
+
+    /**
+     * EquipamentCommand constructor.
+     * @param PinInterface $pin
+     * @param int $value
+     * @param Closure $reflectionFunction
+     */
     public function __construct(PinInterface $pin, int $value, Closure $reflectionFunction)
     {
         $this->pin = $pin;
@@ -30,6 +40,10 @@ class EquipamentCommand implements CommandInterface
         $this->reflectionFunction = $reflectionFunction;
     }
 
+    /**
+     * @param ConnectionInterface $conn
+     * @return Closure
+     */
     public function execute(ConnectionInterface $conn): Closure
     {
         $conn->send(json_encode([

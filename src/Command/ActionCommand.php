@@ -6,6 +6,10 @@ use App\Command\PinType\PinInterface;
 use Closure;
 use Ratchet\ConnectionInterface;
 
+/**
+ * Class ActionCommand
+ * @package App\Command
+ */
 class ActionCommand implements CommandInterface
 {
     /**
@@ -13,12 +17,23 @@ class ActionCommand implements CommandInterface
      */
     private $pin;
 
+    /**
+     * @var
+     */
     private $action;
-    
+
+    /**
+     * @var Closure
+     */
     private $reflection;
     
-    
-    public function __construct(PinInterface $pin, $action, $reflection = null)
+    /**
+     * ActionCommand constructor.
+     * @param PinInterface $pin
+     * @param $action
+     * @param Closure|null $reflection
+     */
+    public function __construct(PinInterface $pin, $action, Closure $reflection = null)
     {
         $this->pin = $pin;
         $this->action = $action;
@@ -26,6 +41,10 @@ class ActionCommand implements CommandInterface
     }
 
 
+    /**
+     * @param ConnectionInterface $conn
+     * @return Closure|null
+     */
     public function execute(ConnectionInterface $conn): ?Closure
     {
         $type = $this->pin->getStrType();
