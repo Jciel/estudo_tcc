@@ -22,7 +22,6 @@ class MessagesService implements ServiceInterface
      */
     public function parseServerMessage(string $msg): array
     {
-        
         $msgArray = json_decode($msg, true);
         
         $commands = [];
@@ -32,7 +31,7 @@ class MessagesService implements ServiceInterface
             $setupCommands = array_map(function ($setupCommand) {
                 
                 $pin = PinFactory::create($setupCommand['tipo'], $setupCommand['pino']);
-                
+
                 if ($setupCommand['acao'] === 'TEMP') {
                     $pin = PinFactory::create('temp', $setupCommand['pino']);
                 }
@@ -46,7 +45,7 @@ class MessagesService implements ServiceInterface
         if (array_key_exists('acoes', $msgArray)) {
             $actionsCommands = array_map(function ($actionCommand) {
                 $pin = PinFactory::create($actionCommand['tipo'], $actionCommand['pino'], 'write');
-                
+
                 return (empty($actionCommand['reflexo']))
                     ? new ActionCommand(
                         $pin,
@@ -198,4 +197,5 @@ class MessagesService implements ServiceInterface
 //            'message' => $e->getMessage()
 //        ]);
 //    }
+
 }
