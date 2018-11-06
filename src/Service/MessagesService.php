@@ -22,6 +22,7 @@ class MessagesService implements ServiceInterface
      */
     public function parseServerMessage(string $msg): array
     {
+        
         $msgArray = json_decode($msg, true);
         
         $commands = [];
@@ -30,7 +31,7 @@ class MessagesService implements ServiceInterface
         if (array_key_exists('setup', $msgArray)) {
             $setupCommands = array_map(function ($setupCommand) {
                 
-                $pin = PinFactory::create($setupCommand['type'], $setupCommand['pino']);
+                $pin = PinFactory::create($setupCommand['tipo'], $setupCommand['pino']);
                 
                 if ($setupCommand['acao'] === 'TEMP') {
                     $pin = PinFactory::create('temp', $setupCommand['pino']);
@@ -44,7 +45,7 @@ class MessagesService implements ServiceInterface
         $actionsCommands = [];
         if (array_key_exists('acoes', $msgArray)) {
             $actionsCommands = array_map(function ($actionCommand) {
-                $pin = PinFactory::create($actionCommand['type'], $actionCommand['pino'], 'write');
+                $pin = PinFactory::create($actionCommand['tipo'], $actionCommand['pino'], 'write');
                 
                 return (empty($actionCommand['reflexo']))
                     ? new ActionCommand(
@@ -122,79 +123,79 @@ class MessagesService implements ServiceInterface
     
 
 
-    /**
-     * @param MessageInterface $tokenData
-     * @return string
-     */
-    public static function errorMessage(MessageInterface $tokenData): string
-    {
-        return json_encode([
-            'error' => $tokenData->isError(),
-            'message' => $tokenData->getMessage(),
-            'token' => $tokenData->getToken()
-        ]);
-    }
-
-    /**
-     * @return string
-     */
-    public static function equipamentDisconected(): string
-    {
-        return '{"error": true, "message": "Equipament disconected", "token": null}';
-    }
-
-    /**
-     * @return string
-     */
-    public static function serverDiconected()
-    {
-        return '{"error": true, "message": "Server disconected", "token": null}';
-    }
-
-    /**
-     * @param string $msg
-     * @return string
-     */
-    public static function message(string $msg): string
-    {
-        return json_encode([
-            'error' => false,
-            'message' => $msg,
-            'token' => null
-        ]);
-    }
-
-    /**
-     * @return string
-     */
-    public static function loginOpened(): string
-    {
-        return json_encode([
-            'error' => false,
-            'message' => 'Login opened'
-        ]);
-    }
-
-    /**
-     * @return string
-     */
-    public static function loginClose(): string
-    {
-        return json_encode([
-            'error' => null,
-            'message' => 'Login closed'
-        ]);
-    }
-
-    /**
-     * @param \Exception $e
-     * @return string
-     */
-    public static function loginError(\Exception $e): string
-    {
-        return json_encode([
-            'error' => true,
-            'message' => $e->getMessage()
-        ]);
-    }
+//    /**
+//     * @param MessageInterface $tokenData
+//     * @return string
+//     */
+//    public static function errorMessage(MessageInterface $tokenData): string
+//    {
+//        return json_encode([
+//            'error' => $tokenData->isError(),
+//            'message' => $tokenData->getMessage(),
+//            'token' => $tokenData->getToken()
+//        ]);
+//    }
+//
+//    /**
+//     * @return string
+//     */
+//    public static function equipamentDisconected(): string
+//    {
+//        return '{"error": true, "message": "Equipament disconected", "token": null}';
+//    }
+//
+//    /**
+//     * @return string
+//     */
+//    public static function serverDiconected()
+//    {
+//        return '{"error": true, "message": "Server disconected", "token": null}';
+//    }
+//
+//    /**
+//     * @param string $msg
+//     * @return string
+//     */
+//    public static function message(string $msg): string
+//    {
+//        return json_encode([
+//            'error' => false,
+//            'message' => $msg,
+//            'token' => null
+//        ]);
+//    }
+//
+//    /**
+//     * @return string
+//     */
+//    public static function loginOpened(): string
+//    {
+//        return json_encode([
+//            'error' => false,
+//            'message' => 'Login opened'
+//        ]);
+//    }
+//
+//    /**
+//     * @return string
+//     */
+//    public static function loginClose(): string
+//    {
+//        return json_encode([
+//            'error' => null,
+//            'message' => 'Login closed'
+//        ]);
+//    }
+//
+//    /**
+//     * @param \Exception $e
+//     * @return string
+//     */
+//    public static function loginError(\Exception $e): string
+//    {
+//        return json_encode([
+//            'error' => true,
+//            'message' => $e->getMessage()
+//        ]);
+//    }
 }

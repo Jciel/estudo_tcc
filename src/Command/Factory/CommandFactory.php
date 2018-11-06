@@ -21,15 +21,23 @@ class CommandFactory
      */
     public static function create(string $type, array $commandsArgs = []): CommandInterface
     {
-        extract($commandsArgs);
+//        extract($commandsArgs);
         
         $commands = [
-            OpenedLogin::class => new OpenedLogin(),
-            LogedInCommand::class => new LogedInCommand($token ?? ""),
-            ErrorCommand::class => new ErrorCommand($message ?? "", $token ?? ""),
-            LoginCloseCommand::class => new LoginCloseCommand(),
+            OpenedLogin::class => function () {
+                return new OpenedLogin();
+            },
+            LogedInCommand::class => function ($token) {
+                return new LogedInCommand($token);
+            },
+            ErrorCommand::class => function ($message, $token) {
+                return new ErrorCommand($message, $token);
+            },
+            LoginCloseCommand::class => function () {
+                return new LoginCloseCommand();
+            },
         ];
         
-        return $commands[$type];
+        return $commands[$type](...$commandsArgs);
     }
 }

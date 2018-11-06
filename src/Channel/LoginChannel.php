@@ -56,10 +56,7 @@ class LoginChannel implements MessageComponentInterface, ChannelInterface
      */
     public function onError(ConnectionInterface $conn, \Exception $e): void
     {
-        $errorCommand = CommandFactory::create(
-            ErrorCommand::class,
-            ["message" => $e->getMessage(), "token" => null]
-        );
+        $errorCommand = CommandFactory::create(ErrorCommand::class, [$e->getMessage(), null]);
         $errorCommand->execute($conn);
         $conn->close();
     }

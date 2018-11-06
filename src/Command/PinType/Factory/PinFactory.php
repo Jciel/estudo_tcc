@@ -25,7 +25,7 @@ class PinFactory
             'digital' => function ($pin, $function) {
                 return new DigitalPin($pin, $function);
             },
-            'analogic' => function ($pin, $function) {
+            'analogico' => function ($pin, $function) {
                 return new AnalogicPin($pin, $function);
             },
             'temp' => function (int $pin) {

@@ -57,7 +57,7 @@ class LoginService implements ServiceInterface
         if (!array_key_exists($dataLogin['user'], $this->loginConfig)) {
             return CommandFactory::create(
                 ErrorCommand::class,
-                ["message" => "Usuário não existe", "token" => null]
+                ["Usuário não existe", "token"]
             );
         }
 
@@ -66,7 +66,7 @@ class LoginService implements ServiceInterface
         if (!($dataLogin['passwd'] === $userLogin['passwd'])) {
             return CommandFactory::create(
                 ErrorCommand::class,
-                ["message" => "Senha incorreta", "token" => null]
+                ["Senha incorreta", "token"]
             );
         }
 
@@ -80,10 +80,9 @@ class LoginService implements ServiceInterface
         ];
 
         $token = $this->jwtService->encode($options, $this->jwtKey);
-        return CommandFactory::create(LogedInCommand::class, ["token" => $token]);
+        return CommandFactory::create(LogedInCommand::class, [$token]);
     }
-
-
+    
     /**
      * @param string $token
      * @return CommandInterface
@@ -99,7 +98,7 @@ class LoginService implements ServiceInterface
         if (empty($tokenData)) {
             return CommandFactory::create(
                 ErrorCommand::class,
-                ["message" => "Invalid token", "token" => null]
+                ["Invalid token", "token"]
             );
         }
         
