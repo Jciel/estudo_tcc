@@ -5,7 +5,10 @@ namespace App\Service;
 use App\Command\ActionCommand;
 use App\Command\CommandInterface;
 use App\Command\EquipamentCommand;
+use App\Command\Factory\CommandFactory;
+use App\Command\InitCommand;
 use App\Command\PinType\Factory\PinFactory;
+use App\Command\PinType\PinInterface;
 use App\Command\SetupCommand;
 use App\ObjectValue\MessageInterface;
 use Ratchet\ConnectionInterface;
@@ -26,48 +29,31 @@ class MessagesService implements ServiceInterface
         
         $commands = [];
         
-        $setupCommands = [];
         if (array_key_exists('setup', $msgArray)) {
             $setupCommands = array_map(function ($setupCommand) {
-                
                 $pin = PinFactory::create($setupCommand['tipo'], $setupCommand['pino']);
-
                 if ($setupCommand['acao'] === 'TEMP') {
                     $pin = PinFactory::create('temp', $setupCommand['pino']);
                 }
-                
                 return new SetupCommand($pin, $setupCommand['acao']);
             }, $msgArray['setup']);
+            
+            $commands['setupCommands'] = $setupCommands;
         }
-        $commands['setupCommands'] = $setupCommands;
 
-        $actionsCommands = [];
         if (array_key_exists('acoes', $msgArray)) {
             $actionsCommands = array_map(function ($actionCommand) {
                 $pin = PinFactory::create($actionCommand['tipo'], $actionCommand['pino'], 'write');
-
-                return (empty($actionCommand['reflexo']))
-                    ? new ActionCommand(
-                        $pin,
-                        $actionCommand['acao'],
-                        function (array &$reflections) {
-                        }
-                    )
-                    : new ActionCommand(
-                        $pin,
-                        $actionCommand['acao'],
-                        function (array &$reflections) use ($actionCommand): void {
-                            $reflections[$actionCommand['reflexo']['pino']] = [
-                                'pin' => PinFactory::create('digital', (int)$actionCommand['pino'], 'write'),
-                                'action' => $actionCommand['acao'],
-                                'alto' => 'HIGH',
-                                'baixo' => 'LOW'
-                            ];
-                        }
-                    );
+                return $this->createActionCommand($actionCommand, $pin);
             }, $msgArray['acoes']);
+            
+            $commands['actionCommands'] = $actionsCommands;
         }
-        $commands['actionCommands'] = $actionsCommands;
+        
+        if (array_key_exists('inicio', $msgArray)) {
+            $initCommand = $msgArray['inicio'];
+            $commands['initCommand'] = new InitCommand($initCommand['tempointervalo'], $initCommand['tempototal']);
+        }
         
         return $commands;
     }
@@ -87,7 +73,7 @@ class MessagesService implements ServiceInterface
             PinFactory::create('digital', $pin, 'write'),
             $value,
             function ($reflections) use ($pin, $value): CommandInterface {
-                if (!array_key_exists($pin, $reflections)) {
+                if (!array_key_exists($pin, $reflections) || $value === $reflections[$pin]['action']) {
                     return new class implements CommandInterface {
                         public function execute(ConnectionInterface $conn)
                         {
@@ -96,106 +82,53 @@ class MessagesService implements ServiceInterface
                 }
                 
                 if ($value > $reflections[$pin]['action']) {
-                    return new ActionCommand($reflections[$pin]['pin'], $reflections[$pin]['baixo']);
+                    return new ActionCommand(
+                        $reflections[$pin]['pin'],
+                        $reflections[$pin]['baixo'],
+                        function () {
+                        }
+                    );
                 }
                 
                 if ($value < $reflections[$pin]['action']) {
-                    return new ActionCommand($reflections[$pin]['pin'], $reflections[$pin]['alto']);
+                    return new ActionCommand(
+                        $reflections[$pin]['pin'],
+                        $reflections[$pin]['alto'],
+                        function () {
+                        }
+                    );
                 }
             }
         );
     }
     
+    private function createActionCommand(array $actionCommand, PinInterface $pin): CommandInterface
+    {
+        if ($this->notHasReflection($actionCommand)) {
+            return CommandFactory::create(ActionCommand::class, [
+                $pin,
+                $actionCommand['acao'],
+                function (array &$reflections): void {
+                }
+            ]);
+        }
+        
+        return CommandFactory::create(ActionCommand::class, [
+            $pin,
+            $actionCommand['acao'],
+            function (array &$reflections) use ($actionCommand): void {
+                $reflections[$actionCommand['reflexo']['pino']] = [
+                    'pin' => PinFactory::create('digital', (int)$actionCommand['pino'], 'write'),
+                    'action' => $actionCommand['acao'],
+                    'alto' => 'HIGH',
+                    'baixo' => 'LOW'
+                ];
+            }
+        ]);
+    }
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-
-//    /**
-//     * @param MessageInterface $tokenData
-//     * @return string
-//     */
-//    public static function errorMessage(MessageInterface $tokenData): string
-//    {
-//        return json_encode([
-//            'error' => $tokenData->isError(),
-//            'message' => $tokenData->getMessage(),
-//            'token' => $tokenData->getToken()
-//        ]);
-//    }
-//
-//    /**
-//     * @return string
-//     */
-//    public static function equipamentDisconected(): string
-//    {
-//        return '{"error": true, "message": "Equipament disconected", "token": null}';
-//    }
-//
-//    /**
-//     * @return string
-//     */
-//    public static function serverDiconected()
-//    {
-//        return '{"error": true, "message": "Server disconected", "token": null}';
-//    }
-//
-//    /**
-//     * @param string $msg
-//     * @return string
-//     */
-//    public static function message(string $msg): string
-//    {
-//        return json_encode([
-//            'error' => false,
-//            'message' => $msg,
-//            'token' => null
-//        ]);
-//    }
-//
-//    /**
-//     * @return string
-//     */
-//    public static function loginOpened(): string
-//    {
-//        return json_encode([
-//            'error' => false,
-//            'message' => 'Login opened'
-//        ]);
-//    }
-//
-//    /**
-//     * @return string
-//     */
-//    public static function loginClose(): string
-//    {
-//        return json_encode([
-//            'error' => null,
-//            'message' => 'Login closed'
-//        ]);
-//    }
-//
-//    /**
-//     * @param \Exception $e
-//     * @return string
-//     */
-//    public static function loginError(\Exception $e): string
-//    {
-//        return json_encode([
-//            'error' => true,
-//            'message' => $e->getMessage()
-//        ]);
-//    }
-
+    private function notHasReflection($actionCommand)
+    {
+        return empty($actionCommand['reflexo']);
+    }
 }

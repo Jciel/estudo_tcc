@@ -2,6 +2,7 @@
 
 namespace App\Command\Factory;
 
+use App\Command\ActionCommand;
 use App\Command\CommandInterface;
 use App\Command\ErrorCommand;
 use App\Command\LogedInCommand;
@@ -36,6 +37,9 @@ class CommandFactory
             LoginCloseCommand::class => function () {
                 return new LoginCloseCommand();
             },
+            ActionCommand::class => function ($pin, $action, $reflection) {
+                return new ActionCommand($pin, $action, $reflection);
+            }
         ];
         
         return $commands[$type](...$commandsArgs);
