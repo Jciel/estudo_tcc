@@ -8,6 +8,7 @@ use App\Service\LoginService;
 use App\Service\MessagesService;
 use App\ServiceManagerInterface;
 use App\WsClient\WsClient;
+use React\EventLoop\LoopInterface;
 
 /**
  * Class ExtruderChannelFactory
@@ -24,8 +25,12 @@ class ExtruderChannelFactory
         /** @var LoginService $loginService */
         $loginService = $serviceManager->get(LoginService::class);
         
+        /** @var MessagesService $messageService */
         $messageService = $serviceManager->get(MessagesService::class);
         
-        return new ExtruderChannel($loginService, $messageService);
+        /** @var LoopInterface $loop */
+        $loop = $serviceManager->getLoop();
+        
+        return new ExtruderChannel($loginService, $messageService, $loop);
     }
 }

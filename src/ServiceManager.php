@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Service\ServiceInterface;
+use React\EventLoop\LoopInterface;
 
 /**
  * Class ServiceManager
@@ -14,6 +15,9 @@ class ServiceManager implements ServiceManagerInterface
      * @var ServiceInterface[] $services
      */
     private $services;
+    
+    /** @var  LoopInterface $loop */
+    private $loop;
     
     /**
      * @var array $config
@@ -48,5 +52,15 @@ class ServiceManager implements ServiceManagerInterface
     public function getConfig(): array
     {
         return $this->config;
+    }
+    
+    public function addLoop(LoopInterface $loop)
+    {
+        $this->loop = $loop;
+    }
+    
+    public function getLoop(): LoopInterface
+    {
+        return $this->loop;
     }
 }

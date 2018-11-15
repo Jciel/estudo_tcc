@@ -8,12 +8,14 @@ use App\Command\CommandErrorInterface;
 use App\Command\CommandInterface;
 use App\Command\EquipamentCommand;
 use App\Command\ErrorCommand;
+use App\Command\InitCommand;
 use App\Command\SetupCommand;
 use App\Service\LoginService;
 use App\Service\MessagesService;
 use App\Service\ServiceInterface;
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
+use React\EventLoop\LoopInterface;
 
 /**
  * Class ExtruderChannel
@@ -47,16 +49,30 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
      * @var array $reflections
      */
     private $reflections = [];
+
+    /**
+     * @var ActionCommand[] $actionCommands
+     */
+    private $actionCommands = [];
+    
+    private $readValues = [];
+
+    /**
+     * @var LoopInterface
+     */
+    private $loop;
     
     /**
      * ExtruderChannel constructor.
      * @param ServiceInterface $loginService
      * @param MessagesService $messageService
+     * @param LoopInterface $loop
      */
-    public function __construct(ServiceInterface $loginService, MessagesService $messageService)
+    public function __construct(ServiceInterface $loginService, MessagesService $messageService, LoopInterface $loop)
     {
         $this->loginService = $loginService;
         $this->messageService = $messageService;
+        $this->loop = $loop;
     }
 
     /**
@@ -145,11 +161,22 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
                 $setupCommand->execute($this->extruderConnection);
             }
             
-            /** @var ActionCommand[] $actionCommands */
-            $actionCommands = $commands['actionCommands'];
-            foreach ($actionCommands as $actionCommand) {
-                $reflection = $actionCommand->execute($this->extruderConnection);
-                $reflection($this->reflections);
+            if (array_key_exists("actionCommands", $commands)) {
+                $this->actionCommands = $commands['actionCommands'];
+            }
+            
+            if (array_key_exists("initCommand", $commands)) {
+                /** @var InitCommand $initCommand */
+                $initCommand = $commands['initCommand'];
+                $addReflections = $initCommand->executeActionCommands($this->extruderConnection, $this->actionCommands);
+                foreach ($addReflections as $addReflection) {
+                    $addReflection($this->reflections);
+                }
+                $initCommand->addTimePeriod($this->loop, function () {
+                    foreach ($this->readValues as $pin => $value) {
+                        $this->clientServer->send("alp://dred/$pin/$value");
+                    }
+                });
             }
         }
         
@@ -160,6 +187,8 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
             /** @var ActionCommand $actionCommandReflection */
             $actionCommandReflection = $reflectionCommand($this->reflections);
             $actionCommandReflection->execute($this->extruderConnection);
+            
+            $this->readValues[$command->getPin()->getPin()] = $command->getValue();
         }
     }
 }

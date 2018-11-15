@@ -40,6 +40,16 @@ class EquipamentCommand implements CommandInterface
         $this->reflectionFunction = $reflectionFunction;
     }
 
+    public function getPin()
+    {
+        return $this->pin;
+    }
+    
+    public function getValue()
+    {
+        return $this->value;
+    }
+    
     /**
      * @param ConnectionInterface $conn
      * @return Closure
