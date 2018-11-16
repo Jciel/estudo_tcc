@@ -13,6 +13,7 @@ use App\Command\SetupCommand;
 use App\Service\LoginService;
 use App\Service\MessagesService;
 use App\Service\ServiceInterface;
+use Closure;
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
 use React\EventLoop\LoopInterface;
@@ -51,11 +52,14 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     private $reflections = [];
 
     /**
-     * @var ActionCommand[] $actionCommands
+     * @var Closure[] $actionCommands
      */
     private $actionCommands = [];
     
-    private $readValues = [];
+    /**
+     * @var Closure[]
+     */
+    private $sendMessageToServerFunctions = [];
 
     /**
      * @var LoopInterface
@@ -152,43 +156,49 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
         }
         
         if ($checkLoginCommand->isServer()) {
-            /** @var CommandInterface[] $commands */
-            $commands = $this->messageService->parseServerMessage($msg);
-            
-            /** @var SetupCommand[] $setupCommands */
-            $setupCommands = $commands['setupCommands'];
-            foreach ($setupCommands as $setupCommand) {
-                $setupCommand->execute($this->extruderConnection);
-            }
-            
-            if (array_key_exists("actionCommands", $commands)) {
-                $this->actionCommands = $commands['actionCommands'];
-            }
-            
-            if (array_key_exists("initCommand", $commands)) {
-                /** @var InitCommand $initCommand */
-                $initCommand = $commands['initCommand'];
-                $addReflections = $initCommand->executeActionCommands($this->extruderConnection, $this->actionCommands);
-                foreach ($addReflections as $addReflection) {
-                    $addReflection($this->reflections);
-                }
-                $initCommand->addTimePeriod($this->loop, function () {
-                    foreach ($this->readValues as $pin => $value) {
-                        $this->clientServer->send("alp://dred/$pin/$value");
-                    }
-                });
-            }
+            $this->serverMessage($msg);
+            return;
         }
         
         if ($checkLoginCommand->isEquipament()) {
             /** @var EquipamentCommand $command */
             $command = $this->messageService->parseEquipamentMessage($msg);
-            $reflectionCommand = $command->execute($this->clientServer);
+            $commandReflectionFunction = $command->execute($this->clientServer);
             /** @var ActionCommand $actionCommandReflection */
-            $actionCommandReflection = $reflectionCommand($this->reflections);
-            $actionCommandReflection->execute($this->extruderConnection);
-            
-            $this->readValues[$command->getPin()->getPin()] = $command->getValue();
+            $actionCommandReflection = $commandReflectionFunction($this->reflections);
+            $sendMessageToServerFunction = $actionCommandReflection->execute($this->extruderConnection);
+            if (!empty($sendMessageToServerFunction)) {
+                $this->sendMessageToServerFunctions[$command->getPin()->getPin()] = $sendMessageToServerFunction;
+            }
+        }
+    }
+    
+    private function serverMessage(string $msg): void
+    {
+        /** @var SetupCommand[] $setupCommands */
+        $setupCommands = $this->messageService->parseServerSetupMessage($msg);
+        foreach ($setupCommands as $setupCommand) {
+            $setupCommand->execute($this->extruderConnection);
+        }
+
+        $actionCommands = $this->messageService->parseServerActionMessage($msg);
+        if (!empty($actionCommands)) {
+            $this->actionCommands = $actionCommands;
+        }
+        
+        /** @var InitCommand $initCommand */
+        $initCommand = $this->messageService->parseServerInitMessage($msg);
+        $addReflections = $initCommand->executeActionCommands($this->extruderConnection, $this->actionCommands);
+        
+        if (!empty($addReflections)) {
+            foreach ($addReflections as $addReflection) {
+                $addReflection($this->reflections);
+            }
+            $initCommand->addTimePeriod($this->loop, function () {
+                foreach ($this->sendMessageToServerFunctions as $sendMessageToServer) {
+                    $sendMessageToServer($this->clientServer);
+                }
+            });
         }
     }
 }

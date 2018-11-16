@@ -13,12 +13,12 @@ use React\EventLoop\LoopInterface;
 class InitCommand implements CommandInterface
 {
     /**
-     * @var int
+     * @var int $intervalTime
      */
     private $intervalTime = 0;
 
     /**
-     * @var int
+     * @var int $totalTime
      */
     private $totalTime = 0;
 
@@ -30,7 +30,7 @@ class InitCommand implements CommandInterface
     public function __construct(int $intervalTime, int $totalTime)
     {
         $this->intervalTime = $intervalTime;
-        $this->totalTime= $totalTime;
+        $this->totalTime = $totalTime;
     }
 
     /**
@@ -43,7 +43,7 @@ class InitCommand implements CommandInterface
         $reflections = array_map(function (ActionCommand $actionCommand) use ($conn): Closure {
             return $actionCommand->execute($conn);
         }, $actionCommands);
-        
+
         return $reflections;
     }
 
@@ -51,9 +51,9 @@ class InitCommand implements CommandInterface
      * @param LoopInterface $loop
      * @param Closure $callback
      */
-    public function addTimePeriod(LoopInterface $loop, Closure $callback)
+    public function addTimePeriod(LoopInterface $loop, Closure $callback): void
     {
-        $loop->addPeriodicTimer(3, $callback);
+        $loop->addPeriodicTimer($this->intervalTime, $callback);
     }
 
     /**

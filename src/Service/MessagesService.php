@@ -11,7 +11,9 @@ use App\Command\PinType\Factory\PinFactory;
 use App\Command\PinType\PinInterface;
 use App\Command\SetupCommand;
 use App\ObjectValue\MessageInterface;
+use Closure;
 use Ratchet\ConnectionInterface;
+use React\EventLoop\LoopInterface;
 
 /**
  * Class MessagesService
@@ -23,39 +25,57 @@ class MessagesService implements ServiceInterface
      * @param string $msg
      * @return CommandInterface[]
      */
-    public function parseServerMessage(string $msg): array
+    public function parseServerSetupMessage(string $msg): array
     {
         $msgArray = json_decode($msg, true);
         
-        $commands = [];
-        
-        if (array_key_exists('setup', $msgArray)) {
-            $setupCommands = array_map(function ($setupCommand) {
-                $pin = PinFactory::create($setupCommand['tipo'], $setupCommand['pino']);
-                if ($setupCommand['acao'] === 'TEMP') {
-                    $pin = PinFactory::create('temp', $setupCommand['pino']);
-                }
-                return new SetupCommand($pin, $setupCommand['acao']);
-            }, $msgArray['setup']);
-            
-            $commands['setupCommands'] = $setupCommands;
+        if (!array_key_exists('setup', $msgArray)) {
+            return [];
         }
+        
+        return array_map(function ($setupCommand) {
+            $pin = PinFactory::create($setupCommand['tipo'], $setupCommand['pino']);
+            if ($setupCommand['acao'] === 'TEMP') {
+                $pin = PinFactory::create('temp', $setupCommand['pino']);
+            }
+            return CommandFactory::create(SetupCommand::class, [$pin, $setupCommand['acao']]);
+        }, $msgArray['setup']);
+    }
 
-        if (array_key_exists('acoes', $msgArray)) {
-            $actionsCommands = array_map(function ($actionCommand) {
-                $pin = PinFactory::create($actionCommand['tipo'], $actionCommand['pino'], 'write');
-                return $this->createActionCommand($actionCommand, $pin);
-            }, $msgArray['acoes']);
-            
-            $commands['actionCommands'] = $actionsCommands;
+    /**
+     * @param string $msg
+     * @return ActionCommand[]
+     */
+    public function parseServerActionMessage(string $msg): array
+    {
+        $msgArray = json_decode($msg, true);
+
+        if (!array_key_exists('acoes', $msgArray)) {
+            return [];
         }
         
-        if (array_key_exists('inicio', $msgArray)) {
-            $initCommand = $msgArray['inicio'];
-            $commands['initCommand'] = new InitCommand($initCommand['tempointervalo'], $initCommand['tempototal']);
+        return array_map(function ($actionCommand) {
+            $pin = PinFactory::create($actionCommand['tipo'], $actionCommand['pino'], 'write');
+            return $this->createActionCommand($actionCommand, $pin);
+        }, $msgArray['acoes']);
+    }
+
+    /**
+     * @param string $msg
+     * @return CommandInterface
+     */
+    public function parseServerInitMessage(string $msg): CommandInterface
+    {
+        $msgArray = json_decode($msg, true);
+
+        if (!array_key_exists('inicio', $msgArray)) {
+            return CommandFactory::create(CommandFactory::ANONIMOUS_INIT_COMMAND, []);
         }
         
-        return $commands;
+        $initCommand = $msgArray['inicio'];
+        $timeInterval = $initCommand['tempointervalo'];
+        $totalTime = $initCommand['tempototal'];
+        return CommandFactory::create(InitCommand::class, [$timeInterval, $totalTime]);
     }
 
     /**
@@ -74,34 +94,43 @@ class MessagesService implements ServiceInterface
             $value,
             function ($reflections) use ($pin, $value): CommandInterface {
                 if (!array_key_exists($pin, $reflections) || $value === $reflections[$pin]['action']) {
-                    return new class implements CommandInterface {
-                        public function execute(ConnectionInterface $conn)
-                        {
-                        }
-                    };
+                    return CommandFactory::create(CommandFactory::ANONIMOUS_COMMAND, []);
                 }
                 
                 if ($value > $reflections[$pin]['action']) {
-                    return new ActionCommand(
+                    CommandFactory::create(ActionCommand::class, [
                         $reflections[$pin]['pin'],
                         $reflections[$pin]['baixo'],
-                        function () {
+                        function (ConnectionInterface $serverConnection) use ($pin, $value): void {
+                            $serverConnection->send(json_encode([
+                                "pin" => $pin,
+                                "value" => $value
+                            ]));
                         }
-                    );
+                    ]);
                 }
                 
                 if ($value < $reflections[$pin]['action']) {
-                    return new ActionCommand(
+                    CommandFactory::create(ActionCommand::class, [
                         $reflections[$pin]['pin'],
                         $reflections[$pin]['alto'],
-                        function () {
+                        function (ConnectionInterface $serverConnection) use ($pin, $value): void {
+                            $serverConnection->send(json_encode([
+                                "pin" => $pin,
+                                "value" => $value
+                            ]));
                         }
-                    );
+                    ]);
                 }
             }
         );
     }
-    
+
+    /**
+     * @param array $actionCommand
+     * @param PinInterface $pin
+     * @return CommandInterface
+     */
     private function createActionCommand(array $actionCommand, PinInterface $pin): CommandInterface
     {
         if ($this->notHasReflection($actionCommand)) {
@@ -126,8 +155,12 @@ class MessagesService implements ServiceInterface
             }
         ]);
     }
-    
-    private function notHasReflection($actionCommand)
+
+    /**
+     * @param array $actionCommand
+     * @return bool
+     */
+    private function notHasReflection(array $actionCommand): bool
     {
         return empty($actionCommand['reflexo']);
     }
