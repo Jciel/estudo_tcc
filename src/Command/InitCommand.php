@@ -43,7 +43,7 @@ class InitCommand implements CommandInterface
         $reflections = array_map(function (ActionCommand $actionCommand) use ($conn): Closure {
             return $actionCommand->execute($conn);
         }, $actionCommands);
-
+      
         return $reflections;
     }
 
