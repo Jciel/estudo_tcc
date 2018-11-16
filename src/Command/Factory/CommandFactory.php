@@ -5,9 +5,14 @@ namespace App\Command\Factory;
 use App\Command\ActionCommand;
 use App\Command\CommandInterface;
 use App\Command\ErrorCommand;
+use App\Command\InitCommand;
 use App\Command\LogedInCommand;
 use App\Command\LoginCloseCommand;
 use App\Command\OpenedLogin;
+use App\Command\SetupCommand;
+use Closure;
+use Ratchet\ConnectionInterface;
+use React\EventLoop\LoopInterface;
 
 /**
  * Class CommandFactory
@@ -15,6 +20,9 @@ use App\Command\OpenedLogin;
  */
 class CommandFactory
 {
+    const ANONIMOUS_INIT_COMMAND = "AnonymousInitCommand";
+    const ANONIMOUS_COMMAND = "AnonymousCommand";
+    
     /**
      * @param string $type
      * @param array $commandsArgs
@@ -39,6 +47,32 @@ class CommandFactory
             },
             ActionCommand::class => function ($pin, $action, $reflection) {
                 return new ActionCommand($pin, $action, $reflection);
+            },
+            InitCommand::class => function ($timeInterval, $totalTime) {
+                return new InitCommand($timeInterval, $totalTime);
+            },
+            SetupCommand::class => function ($pin, $action) {
+                return new SetupCommand($pin, $action);
+            },
+            self::ANONIMOUS_INIT_COMMAND => function () {
+                return new class implements CommandInterface {
+                    public function executeActionCommands(ConnectionInterface $conn, array $actionCommands): void
+                    {
+                    }
+                    public function addTimePeriod(LoopInterface $loop, Closure $callback): void
+                    {
+                    }
+                    public function execute(ConnectionInterface $conn): void
+                    {
+                    }
+                };
+            },
+            self::ANONIMOUS_COMMAND => function () {
+                return new class implements CommandInterface {
+                    public function execute(ConnectionInterface $conn): void
+                    {
+                    }
+                };
             }
         ];
         
