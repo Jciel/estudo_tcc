@@ -97,31 +97,18 @@ class MessagesService implements ServiceInterface
                     return CommandFactory::create(CommandFactory::ANONIMOUS_COMMAND, []);
                 }
                 
-                if ($value > $reflections[$pin]['action']) {
-                    CommandFactory::create(ActionCommand::class, [
-                        $reflections[$pin]['pin'],
-                        $reflections[$pin]['baixo'],
-                        function (ConnectionInterface $serverConnection) use ($pin, $value): void {
-                            $serverConnection->send(json_encode([
-                                "pin" => $pin,
-                                "value" => $value
-                            ]));
-                        }
-                    ]);
-                }
-                
-                if ($value < $reflections[$pin]['action']) {
-                    CommandFactory::create(ActionCommand::class, [
-                        $reflections[$pin]['pin'],
-                        $reflections[$pin]['alto'],
-                        function (ConnectionInterface $serverConnection) use ($pin, $value): void {
-                            $serverConnection->send(json_encode([
-                                "pin" => $pin,
-                                "value" => $value
-                            ]));
-                        }
-                    ]);
-                }
+                $reflectionInfo = $reflections[$pin];
+                $action = ($value > $reflectionInfo['action']) ? $reflectionInfo['action'] : $reflectionInfo['alto'];
+                return CommandFactory::create(ActionCommand::class, [
+                    $reflections[$pin]['pin'],
+                    $action,
+                    function (ConnectionInterface $serverConnection) use ($pin, $value): void {
+                        $serverConnection->send(json_encode([
+                            "pin" => $pin,
+                            "value" => $value
+                        ]));
+                    }
+                ]);
             }
         );
     }

@@ -10,16 +10,25 @@ use React\EventLoop\LoopInterface;
 class WsClient
 {
     private $loop;
+    
+    
+    private $serverChannelsUrls = [
+        "extrusora" => "ws://127.0.0.1:9000"
+    ];
+
+    private $raspChannelsUrls = [
+        "extrusora" => "ws://localhost:8080/extruder?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1NDA1MTUxODcsImV4cCI6MTAwMDAxNTQwNTE1MTg2LCJuYmYiOjE1NDA1MTUxODYsImRhdGEiOnsidXNlciI6ImV4dHJ1c29yYSIsInR5cGUiOiJlcXVpcGFtZW50Iiwicm91dGVzIjpbImV4dHJ1ZGUiXX19.jn73drtnHHBl9eFVGGRVI2N6PdhoBEFjGWc2YSuZLlQ"
+    ];
 
     /**
-     * @var WebSocket $connToRasp
+     * @var WebSocket[] $connToRasp
      */
-    private $connToRasp;
+    private $connToRasp = [];
 
     /**
-     * @var WebSocket $connToServer
+     * @var WebSocket[] $connToServer
      */
-    private $connToServer;
+    private $connToServer = [];
 
     public function __construct(LoopInterface $loop)
     {
@@ -35,21 +44,29 @@ class WsClient
 
         $connectorToRasp = new Connector($this->loop, $reactConnector);
         $connectorToServer = new Connector($this->loop, $reactConnector);
-
-        $connectorToRasp('ws://127.0.0.1:9000')->then(function (WebSocket $conn) {
-            $this->connToRasp = $conn;
-        });
         
-        $connectorToServer('ws://127.0.0.1:9000')->then(function (WebSocket $conn) {
-            $this->connToServer = $conn;
-        });
+        foreach ($this->raspChannelsUrls as $name => $raspChannelsUrl) {
+            $connectorToRasp($raspChannelsUrl)->then(function (WebSocket $conn) use ($name) {
+                $this->connToRasp[$name] = $conn;
+            });
+        }
         
-        $this->connToServer->on('message', function (MessageInterface $msg) {
-            $this->connToRasp->send($msg);
-        });
-
-        $this->connToRasp->on('message', function (MessageInterface $msg) {
-            $this->connToServer->send($msg);
-        });
+        foreach ($this->serverChannelsUrls as $name => $serverChannelUrl) {
+            $connectorToServer($serverChannelUrl)->then(function (WebSocket $conn) use ($name) {
+                $this->connToServer[$name] = $conn;
+            });
+        }
+        
+        foreach ($this->connToRasp as $chanel => $connToRasp) {
+            $this->connToServer[$chanel]->on('message', function (MessageInterface $msg) use ($connToRasp) {
+                $connToRasp->send($msg);
+            });
+        }
+        
+        foreach ($this->connToServer as $chanel => $connToServer) {
+            $this->connToRasp[$chanel]->on('message', function (MessageInterface $msg) use ($connToServer) {
+                $connToServer->send($msg);
+            });
+        }
     }
 }
