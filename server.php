@@ -13,6 +13,11 @@ require_once "vendor/autoload.php";
     /** @var \App\ServiceManager $container */
     $container = require "config/container.php";
     $container->addLoop($loop);
+    
+    /** @var \Middleware\WsClient\WsClient $wsClient */
+    $wsClient = $container->get(\Middleware\WsClient\WsClient::class);
+    
+    $wsClient->connect();
    
     $channels = require "config/channels.php";
 

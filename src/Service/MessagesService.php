@@ -85,7 +85,6 @@ class MessagesService implements ServiceInterface
     public function parseEquipamentMessage(string $msg): CommandInterface
     {
         $equipamentMessageArray = explode('/', preg_replace("/[\/]+/", '/', $msg));
-        
         $pin = (int)$equipamentMessageArray[2];
         $value = (int)$equipamentMessageArray[3];
         
@@ -93,12 +92,10 @@ class MessagesService implements ServiceInterface
             PinFactory::create('digital', $pin, 'write'),
             $value,
             function ($reflections) use ($pin, $value): CommandInterface {
-                if (!array_key_exists($pin, $reflections) || $value === $reflections[$pin]['action']) {
-                    return CommandFactory::create(CommandFactory::ANONIMOUS_COMMAND, []);
-                }
-                
                 $reflectionInfo = $reflections[$pin];
-                $action = ($value > $reflectionInfo['action']) ? $reflectionInfo['action'] : $reflectionInfo['alto'];
+                $action = ($value > $reflectionInfo['action']) ? $reflectionInfo['baixo'] : $reflectionInfo['alto'];
+                $action = (empty($reflectionInfo['action'])) ? null : $action;
+                
                 return CommandFactory::create(ActionCommand::class, [
                     $reflections[$pin]['pin'],
                     $action,
@@ -120,29 +117,22 @@ class MessagesService implements ServiceInterface
      */
     private function createActionCommand(array $actionCommand, PinInterface $pin): CommandInterface
     {
-        if ($this->notHasReflection($actionCommand)) {
-            return CommandFactory::create(ActionCommand::class, [
-                $pin,
-                $actionCommand['acao'],
-                function (array &$reflections): void {
-                }
-            ]);
-        }
-        
+        $index = ($this->notHasReflection($actionCommand)) ? $actionCommand['pino'] : $actionCommand['reflexo']['pino'];
+        $action = ($this->notHasReflection($actionCommand)) ? null : $actionCommand['acao'];
         return CommandFactory::create(ActionCommand::class, [
             $pin,
             $actionCommand['acao'],
-            function (array &$reflections) use ($actionCommand): void {
-                $reflections[$actionCommand['reflexo']['pino']] = [
+            function (array &$reflections) use ($actionCommand, $index, $action): void {
+                $reflections[$index] = [
                     'pin' => PinFactory::create('digital', (int)$actionCommand['pino'], 'write'),
-                    'action' => $actionCommand['acao'],
+                    'action' => $action,
                     'alto' => 'HIGH',
                     'baixo' => 'LOW'
                 ];
             }
         ]);
     }
-
+    
     /**
      * @param array $actionCommand
      * @return bool

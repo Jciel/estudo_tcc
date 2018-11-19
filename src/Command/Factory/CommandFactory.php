@@ -67,10 +67,16 @@ class CommandFactory
                     }
                 };
             },
-            self::ANONIMOUS_COMMAND => function () {
-                return new class implements CommandInterface {
-                    public function execute(ConnectionInterface $conn): void
+            self::ANONIMOUS_COMMAND => function (Closure $reflection) {
+                return new class($reflection) implements CommandInterface {
+                    private $reflection;
+                    public function __construct(Closure $reflection)
                     {
+                        $this->reflection = $reflection;
+                    }
+                    public function execute(ConnectionInterface $conn): Closure
+                    {
+                        return $this->reflection;
                     }
                 };
             }
