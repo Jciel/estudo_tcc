@@ -58,12 +58,12 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     private $actionCommands = [];
     
     /**
-     * @var Closure[]
+     * @var Closure[] $sendMessageToServerFunctions
      */
     private $sendMessageToServerFunctions = [];
 
     /**
-     * @var LoopInterface
+     * @var LoopInterface $loop
      */
     private $loop;
     
@@ -164,9 +164,10 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
         if ($checkLoginCommand->isEquipament()) {
             /** @var EquipamentCommand $equipamentCommand */
             $equipamentCommand = $this->messageService->parseEquipamentMessage($msg);
-            $commandReflectionFunction = $equipamentCommand->execute($this->clientServer);
+            
+            $equipamentReflectionFunction = $equipamentCommand->execute($this->clientServer);
             /** @var ActionCommand $actionCommandReflection */
-            $actionCommandReflection = $commandReflectionFunction($this->reflections);
+            $actionCommandReflection = $equipamentReflectionFunction($this->reflections);
             $sendMessageToServerFunction = $actionCommandReflection->execute($this->extruderConnection);
             if (!empty($sendMessageToServerFunction)) {
                 $pin = $equipamentCommand->getPin()->getPin();
@@ -177,7 +178,6 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     
     private function serverMessage(string $msg): void
     {
-        
         $setupCommands = $this->messageService->parseServerSetupMessage($msg);
         array_walk($setupCommands, function ($setupCommand) {
             /** @var SetupCommand $setupCommand */

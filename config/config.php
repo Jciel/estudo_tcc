@@ -9,12 +9,13 @@ return [
     'services' => [
         \App\Service\LoginService::class => \App\Service\Factory\LoginServiceFactory::class,
         \App\Service\JwtService::class => \App\Service\Factory\JwtServiceFactory::class,
-        \App\Service\MessagesService::class => \App\Service\Factory\MessageServiceFactory::class
+        \App\Service\MessagesService::class => \App\Service\Factory\MessageServiceFactory::class,
         
         // WsClient
-//        \App\WsClient\WsClient::class => \App\WsClient\Factory\WsClientFactory::class
+        \Middleware\WsClient\WsClient::class => \Middleware\WsClient\Factory\WsClientFactory::class
     ],
     'channels' => [
+        
         \App\Channel\LoginChannel::class => \App\Channel\Factory\LoginChannelFactory::class,
         \App\Channel\ExtruderChannel::class => \App\Channel\Factory\ExtruderChannelFactory::class,
 //        \App\Channel\AgglutinatorChannel::class => \App\Channel\Factory\AgglutinatorChannelFactory::class

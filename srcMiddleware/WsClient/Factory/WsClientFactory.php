@@ -1,13 +1,14 @@
 <?php declare(strict_types=1);
 
-namespace App\WsClient\Factory;
+namespace Middleware\WsClient\Factory;
 
+use App\Service\ServiceInterface;
 use App\ServiceManagerInterface;
-use App\WsClient\WsClient;
+use Middleware\WsClient\WsClient;
 
 class WsClientFactory
 {
-    public function __invoke(ServiceManagerInterface $serviceManager)
+    public function __invoke(ServiceManagerInterface $serviceManager): ServiceInterface
     {
         $loop = $serviceManager->getLoop();
         

@@ -49,8 +49,11 @@ class ActionCommand implements CommandInterface
         $type = $this->pin->getStrType();
         $pin = $this->pin->getPin();
         $power = ($this->action === 'HIGH') ? 1 : 0;
-        $conn->send("alp://$type/$pin/$power");
-
+        
+        if (!empty($this->action)) {
+            $conn->send("alp://$type/$pin/$power");
+        }
+        
         return $this->reflection;
     }
 }
