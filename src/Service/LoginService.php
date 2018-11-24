@@ -7,9 +7,6 @@ use App\Command\ConnectionCommand;
 use App\Command\ErrorCommand;
 use App\Command\Factory\CommandFactory;
 use App\Command\LogedInCommand;
-use App\ObjectValue\ConnectionLoginData;
-use App\ObjectValue\Message;
-use App\ObjectValue\MessageInterface;
 use Ratchet\ConnectionInterface;
 
 /**
@@ -96,10 +93,7 @@ class LoginService implements ServiceInterface
         }, $tokens);
 
         if (empty($tokenData)) {
-            return CommandFactory::create(
-                ErrorCommand::class,
-                ["Invalid token", "token"]
-            );
+            return CommandFactory::create(ErrorCommand::class, ["Invalid token", "token"]);
         }
         
         return new ConnectionCommand(

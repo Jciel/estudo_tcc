@@ -2,7 +2,6 @@
 
 namespace App\Channel;
 
-use App\Channel\Factory\ExtruderChannelFactory;
 use App\Command\ActionCommand;
 use App\Command\CommandConnectionInterface;
 use App\Command\CommandErrorInterface;
@@ -11,8 +10,10 @@ use App\Command\EquipamentCommand;
 use App\Command\ErrorCommand;
 use App\Command\InitCommand;
 use App\Command\SetupCommand;
+use App\Service\EquipmentMessageInterface;
 use App\Service\LoginService;
-use App\Service\MessagesService;
+use App\Service\ServerMessageInterface;
+use App\Service\ServerMessageService;
 use App\Service\ServiceInterface;
 use Closure;
 use Ratchet\ConnectionInterface;
@@ -43,9 +44,12 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     private $loginService;
     
     /**
-     * @var MessagesService $messageService
+     * @var ServerMessageInterface $serverMessageService
      */
-    private $messageService;
+    private $serverMessageService;
+    
+    /** @var EquipmentMessageInterface $messageExtruderService */
+    private $messageExtruderService;
 
     /**
      * @var array $reflections
@@ -66,17 +70,23 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
      * @var LoopInterface $loop
      */
     private $loop;
-    
+
     /**
      * ExtruderChannel constructor.
      * @param ServiceInterface $loginService
-     * @param MessagesService $messageService
+     * @param ServerMessageInterface $serverMessageService
+     * @param EquipmentMessageInterface $messageExtruderService
      * @param LoopInterface $loop
      */
-    public function __construct(ServiceInterface $loginService, MessagesService $messageService, LoopInterface $loop)
-    {
+    public function __construct(
+        ServiceInterface $loginService,
+        ServerMessageInterface $serverMessageService,
+        EquipmentMessageInterface $messageExtruderService,
+        LoopInterface $loop
+    ) {
         $this->loginService = $loginService;
-        $this->messageService = $messageService;
+        $this->serverMessageService = $serverMessageService;
+        $this->messageExtruderService = $messageExtruderService;
         $this->loop = $loop;
     }
 
@@ -87,10 +97,10 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     {
         $token = $this->getToken($conn->httpRequest);
 
-        /** @var CommandErrorInterface|CommandConnectionInterface $tokenData */
+        /** @var CommandErrorInterface|CommandConnectionInterface|CommandInterface $tokenData */
         $tokenData = $this->loginService->checkLogin($token);
         
-        if ($tokenData instanceof ErrorCommand) {
+        if ($tokenData->isError()) {
             $tokenData->execute($conn);
             $conn->close();
             return;
@@ -148,10 +158,10 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     {
         $token = $this->getToken($conn->httpRequest);
 
-        /** @var CommandErrorInterface|CommandConnectionInterface $checkLoginCommand */
+        /** @var CommandErrorInterface|CommandConnectionInterface|CommandInterface $checkLoginCommand */
         $checkLoginCommand = $this->loginService->checkLogin($token);
         
-        if ($checkLoginCommand instanceof ErrorCommand) {
+        if ($checkLoginCommand->isError()) {
             $checkLoginCommand->execute($conn);
             return;
         }
@@ -163,7 +173,7 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
         
         if ($checkLoginCommand->isEquipament()) {
             /** @var EquipamentCommand $equipamentCommand */
-            $equipamentCommand = $this->messageService->parseEquipamentMessage($msg);
+            $equipamentCommand = $this->messageExtruderService->parseEquipmentMessage($msg);
             
             $equipamentReflectionFunction = $equipamentCommand->execute($this->clientServer);
             /** @var ActionCommand $actionCommandReflection */
@@ -178,19 +188,19 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     
     private function serverMessage(string $msg): void
     {
-        $setupCommands = $this->messageService->parseServerSetupMessage($msg);
+        $setupCommands = $this->serverMessageService->parseServerSetupMessage($msg);
         array_walk($setupCommands, function ($setupCommand) {
             /** @var SetupCommand $setupCommand */
             $setupCommand->execute($this->extruderConnection);
         });
         
-        $actionCommands = $this->messageService->parseServerActionMessage($msg);
+        $actionCommands = $this->serverMessageService->parseServerActionMessage($msg);
         if (!empty($actionCommands)) {
             $this->actionCommands = $actionCommands;
         }
         
         /** @var InitCommand $initCommand */
-        $initCommand = $this->messageService->parseServerInitMessage($msg);
+        $initCommand = $this->serverMessageService->parseServerInitMessage($msg);
         $addReflectionFunctions = $initCommand->executeActionCommands($this->extruderConnection, $this->actionCommands);
         
         if (empty($addReflectionFunctions)) {

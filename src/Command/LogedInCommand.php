@@ -8,7 +8,7 @@ use Ratchet\ConnectionInterface;
  * Class LogedInCommand
  * @package App\Command
  */
-class LogedInCommand implements CommandInterface
+class LogedInCommand implements CommandInterface, CommandErrorInterface
 {
     /**
      * @var string $token
@@ -34,5 +34,10 @@ class LogedInCommand implements CommandInterface
             "message" => "Valid",
             "token" => $this->toekn
         ]));
+    }
+
+    public function isError(): bool
+    {
+        return false;
     }
 }

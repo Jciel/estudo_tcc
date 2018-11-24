@@ -8,31 +8,38 @@ use Ratchet\Client\WebSocket;
 use Ratchet\RFC6455\Messaging\MessageInterface;
 use React\EventLoop\LoopInterface;
 
+/**
+ * Class WsClient
+ * @package Middleware\WsClient
+ */
 class WsClient implements ServiceInterface
 {
+    /**
+     * @var LoopInterface $loop
+     */
     private $loop;
-    
-    
-    private $serverChannelsUrls = "ws://localhost:80/extruder?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1NDA0ODc1MTgsImV4cCI6MTAwMDAxNTQwNDg3NTE3LCJuYmYiOjE1NDA0ODc1MTcsImRhdGEiOnsidXNlciI6ImpvY2llbCIsInR5cGUiOiJjbGllbnQiLCJyb3V0ZXMiOlsiZXh0cnVkZSJdfX0.oVuBYGwOc5jgZ8SGYvppe1PPk8z-NAMOdMJvkKHHBaE";
 
+    /**
+     * @var string $serverChannelsUrls
+     */
+    private $serverChannelsUrls = "ws://192.168.254.47:3001";
+//    private $serverChannelsUrls = "ws://localhost:80/extruder?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1NDA1MTUxODcsImV4cCI6MTAwMDAxNTQwNTE1MTg2LCJuYmYiOjE1NDA1MTUxODYsImRhdGEiOnsidXNlciI6ImV4dHJ1c29yYSIsInR5cGUiOiJlcXVpcGFtZW50Iiwicm91dGVzIjpbImV4dHJ1ZGUiXX19.jn73drtnHHBl9eFVGGRVI2N6PdhoBEFjGWc2YSuZLlQ";
+
+    /**
+     * @var string $raspChannelsUrls
+     */
     private $raspChannelsUrls = "ws://localhost:8080/extruder?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1NDA1MTUxODcsImV4cCI6MTAwMDAxNTQwNTE1MTg2LCJuYmYiOjE1NDA1MTUxODYsImRhdGEiOnsidXNlciI6ImV4dHJ1c29yYSIsInR5cGUiOiJlcXVpcGFtZW50Iiwicm91dGVzIjpbImV4dHJ1ZGUiXX19.jn73drtnHHBl9eFVGGRVI2N6PdhoBEFjGWc2YSuZLlQ";
 
     /**
-     * @var WebSocket[] $connToRasp
+     * WsClient constructor.
+     * @param LoopInterface $loop
      */
-    private $connToRasp;
-
-    /**
-     * @var WebSocket[] $connToServer
-     */
-    private $connToServer;
-
     public function __construct(LoopInterface $loop)
     {
         $this->loop = $loop;
     }
 
-    public function connect()
+    public function connect(): void
     {
         $reactConnector = new \React\Socket\Connector($this->loop, [
             'dns' => '8.8.8.8',
@@ -57,6 +64,8 @@ class WsClient implements ServiceInterface
             $connToServer->on('message', function (MessageInterface $msg) use (&$connToRasp) {
                 $connToRasp->send($msg);
             });
+        }, function ($e) {
+            echo $e->getMessage() .  "\n";
         });
     }
 }

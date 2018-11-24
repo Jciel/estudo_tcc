@@ -48,4 +48,9 @@ class ErrorCommand implements CommandErrorInterface, CommandInterface
             "token" => $this->token
         ]));
     }
+
+    public function isError(): bool
+    {
+        return $this->error;
+    }
 }
