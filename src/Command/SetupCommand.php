@@ -2,7 +2,6 @@
 
 namespace App\Command;
 
-use App\Command\PinType\DigitalPin;
 use App\Command\PinType\PinInterface;
 use Ratchet\ConnectionInterface;
 

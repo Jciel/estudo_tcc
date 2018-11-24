@@ -9,7 +9,8 @@ return [
     'services' => [
         \App\Service\LoginService::class => \App\Service\Factory\LoginServiceFactory::class,
         \App\Service\JwtService::class => \App\Service\Factory\JwtServiceFactory::class,
-        \App\Service\MessagesService::class => \App\Service\Factory\MessageServiceFactory::class,
+        \App\Service\ServerMessageService::class => \App\Service\Factory\ServerMessageServiceFactory::class,
+        \App\Service\MessageExtruderService::class => \App\Service\Factory\MessageExtruderServiceFactory::class,
         
         // WsClient
         \Middleware\WsClient\WsClient::class => \Middleware\WsClient\Factory\WsClientFactory::class

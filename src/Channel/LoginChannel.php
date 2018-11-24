@@ -7,7 +7,6 @@ use App\Command\Factory\CommandFactory;
 use App\Command\LoginCloseCommand;
 use App\Command\OpenedLogin;
 use App\Service\LoginService;
-use App\Service\MessagesService;
 use App\Service\ServiceInterface;
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;

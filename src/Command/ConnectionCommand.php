@@ -8,7 +8,7 @@ use Ratchet\ConnectionInterface;
  * Class ConnectionCommand
  * @package App\Command
  */
-class ConnectionCommand implements CommandInterface, CommandConnectionInterface
+class ConnectionCommand implements CommandInterface, CommandConnectionInterface, CommandErrorInterface
 {
     /**
      * @var string
@@ -49,6 +49,11 @@ class ConnectionCommand implements CommandInterface, CommandConnectionInterface
      * @var null|string
      */
     private $token;
+    
+    /**
+     * @var bool
+     */
+    private $error = false;
 
     /**
      * ConnectionCommand constructor.
@@ -158,6 +163,13 @@ class ConnectionCommand implements CommandInterface, CommandConnectionInterface
      */
     public function execute(ConnectionInterface $conn)
     {
-        // TODO: Implement execute() method.
+    }
+
+    /**
+     * @return bool
+     */
+    public function isError(): bool
+    {
+        return $this->error;
     }
 }

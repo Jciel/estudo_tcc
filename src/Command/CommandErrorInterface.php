@@ -8,5 +8,5 @@ namespace App\Command;
  */
 interface CommandErrorInterface
 {
-
+    public function isError(): bool;
 }
