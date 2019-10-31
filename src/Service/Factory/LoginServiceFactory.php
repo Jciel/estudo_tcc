@@ -2,9 +2,9 @@
 
 namespace App\Service\Factory;
 
+use App\Service\Interfaces\ServiceInterface;
 use App\Service\JwtService;
 use App\Service\LoginService;
-use App\Service\ServiceInterface;
 use App\ServiceManagerInterface;
 
 /**

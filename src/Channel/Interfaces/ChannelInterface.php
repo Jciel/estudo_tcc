@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace App\Channel;
+namespace App\Channel\Interfaces;
 
 /**
  * Interface ChannelInterface
- * @package App\Channel
+ * @package App\Channel\Interfaces
  */
 interface ChannelInterface
 {

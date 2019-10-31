@@ -2,7 +2,7 @@
 
 namespace App;
 
-use App\Service\ServiceInterface;
+use App\Service\Interfaces\ServiceInterface;
 
 /**
  * Interface ServiceManagerInterface

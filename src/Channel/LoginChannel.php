@@ -2,12 +2,13 @@
 
 namespace App\Channel;
 
+use App\Channel\Interfaces\ChannelInterface;
 use App\Command\ErrorCommand;
 use App\Command\Factory\CommandFactory;
 use App\Command\LoginCloseCommand;
 use App\Command\OpenedLogin;
+use App\Service\Interfaces\ServiceInterface;
 use App\Service\LoginService;
-use App\Service\ServiceInterface;
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
 
@@ -57,6 +58,7 @@ class LoginChannel implements MessageComponentInterface, ChannelInterface
     {
         $errorCommand = CommandFactory::create(ErrorCommand::class, [$e->getMessage(), null]);
         $errorCommand->execute($conn);
+        var_dump("testando");
         $conn->close();
     }
 

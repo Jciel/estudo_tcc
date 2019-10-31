@@ -2,7 +2,8 @@
 
 namespace App;
 
-use App\Channel\ChannelInterface;
+
+use App\Channel\Interfaces\ChannelInterface;
 
 /**
  * Class ChannelManager

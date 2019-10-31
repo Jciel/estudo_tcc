@@ -2,11 +2,12 @@
 
 namespace App\Service;
 
-use App\Command\CommandInterface;
 use App\Command\ConnectionCommand;
 use App\Command\ErrorCommand;
 use App\Command\Factory\CommandFactory;
+use App\Command\Interfaces\CommandInterface;
 use App\Command\LogedInCommand;
+use App\Service\Interfaces\ServiceInterface;
 use Ratchet\ConnectionInterface;
 
 /**

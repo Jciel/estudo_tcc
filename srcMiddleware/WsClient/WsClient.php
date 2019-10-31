@@ -2,7 +2,7 @@
 
 namespace Middleware\WsClient;
 
-use App\Service\ServiceInterface;
+use App\Service\Interfaces\ServiceInterface;
 use Ratchet\Client\Connector;
 use Ratchet\Client\WebSocket;
 use Ratchet\RFC6455\Messaging\MessageInterface;

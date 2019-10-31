@@ -4,7 +4,7 @@ namespace App\Command\PinType\Factory;
 
 use App\Command\PinType\AnalogicPin;
 use App\Command\PinType\DigitalPin;
-use App\Command\PinType\PinInterface;
+use App\Command\PinType\Interfaces\PinInterface;
 use App\Command\PinType\TemperaturePin;
 
 /**

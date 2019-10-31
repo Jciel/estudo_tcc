@@ -2,8 +2,8 @@
 
 namespace App\Channel\Factory;
 
-use App\Channel\ChannelInterface;
 use App\Channel\ExtruderChannel;
+use App\Channel\Interfaces\ChannelInterface;
 use App\Service\EquipmentMessageInterface;
 use App\Service\LoginService;
 use App\Service\MessageExtruderService;

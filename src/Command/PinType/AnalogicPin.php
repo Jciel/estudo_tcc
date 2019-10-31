@@ -2,6 +2,9 @@
 
 namespace App\Command\PinType;
 
+use App\Command\PinType\Interfaces\AnalogicPinInterface;
+use App\Command\PinType\Interfaces\PinInterface;
+
 /**
  * Class AnalogicPin
  * @package App\Command\PinType

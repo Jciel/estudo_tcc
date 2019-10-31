@@ -2,7 +2,7 @@
 
 namespace Middleware\WsClient\Factory;
 
-use App\Service\ServiceInterface;
+use App\Service\Interfaces\ServiceInterface;
 use App\ServiceManagerInterface;
 use Middleware\WsClient\WsClient;
 

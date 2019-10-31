@@ -2,9 +2,11 @@
 
 namespace App\Command;
 
+use App\Command\Interfaces\CommandInterface;
 use Closure;
 use Ratchet\ConnectionInterface;
 use React\EventLoop\LoopInterface;
+use React\EventLoop\TimerInterface;
 
 /**
  * Class InitCommand
@@ -43,17 +45,23 @@ class InitCommand implements CommandInterface
         $reflections = array_map(function (ActionCommand $actionCommand) use ($conn): Closure {
             return $actionCommand->execute($conn);
         }, $actionCommands);
-      
+
         return $reflections;
     }
 
     /**
      * @param LoopInterface $loop
      * @param Closure $callback
+     * @return TimerInterface
      */
-    public function addTimePeriod(LoopInterface $loop, Closure $callback): void
+    public function addTimePeriod(LoopInterface $loop, Closure $callback): TimerInterface
     {
-        $loop->addPeriodicTimer($this->intervalTime, $callback);
+        return $loop->addPeriodicTimer($this->intervalTime, $callback);
+    }
+
+    public function addEndTime(LoopInterface $loop, Closure $callback): void
+    {
+        $loop->addTimer($this->totalTime, $callback);
     }
 
     /**

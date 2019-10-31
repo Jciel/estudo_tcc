@@ -2,6 +2,9 @@
 
 namespace App\Command\PinType;
 
+use App\Command\PinType\Interfaces\DigitalPinInterface;
+use App\Command\PinType\Interfaces\PinInterface;
+
 /**
  * Class DigitalPin
  * @package App\Command\PinType

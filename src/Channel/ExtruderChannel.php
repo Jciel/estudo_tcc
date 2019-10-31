@@ -2,19 +2,18 @@
 
 namespace App\Channel;
 
+use App\Channel\Interfaces\ChannelInterface;
 use App\Command\ActionCommand;
-use App\Command\CommandConnectionInterface;
-use App\Command\CommandErrorInterface;
-use App\Command\CommandInterface;
 use App\Command\EquipamentCommand;
 use App\Command\ErrorCommand;
 use App\Command\InitCommand;
+use App\Command\Interfaces\CommandConnectionInterface;
+use App\Command\Interfaces\CommandErrorInterface;
+use App\Command\Interfaces\CommandInterface;
 use App\Command\SetupCommand;
-use App\Service\EquipmentMessageInterface;
+use App\Service\Interfaces\EquipmentMessageInterface;
+use App\Service\Interfaces\ServerMessageInterface;
 use App\Service\LoginService;
-use App\Service\ServerMessageInterface;
-use App\Service\ServerMessageService;
-use App\Service\ServiceInterface;
 use Closure;
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
@@ -29,12 +28,12 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     use ChannelTrait;
 
     /**
-     * @var ConnectionInterface $extruderConnection
+     * @var ?ConnectionInterface $extruderConnection
      */
     protected $extruderConnection;
 
     /**
-     * @var ConnectionInterface $clientServer
+     * @var ?ConnectionInterface $clientServer
      */
     private $clientServer;
     
@@ -73,13 +72,13 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
 
     /**
      * ExtruderChannel constructor.
-     * @param ServiceInterface $loginService
+     * @param LoginService $loginService
      * @param ServerMessageInterface $serverMessageService
      * @param EquipmentMessageInterface $messageExtruderService
      * @param LoopInterface $loop
      */
     public function __construct(
-        ServiceInterface $loginService,
+        LoginService $loginService,
         ServerMessageInterface $serverMessageService,
         EquipmentMessageInterface $messageExtruderService,
         LoopInterface $loop
@@ -132,7 +131,7 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
         }
 
         if ($tokenData->isServer()) {
-            $this->server = null;
+            $this->clientServer = null;
         }
 
         if ($tokenData->isEquipament()) {
@@ -160,22 +159,25 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
 
         /** @var CommandErrorInterface|CommandConnectionInterface|CommandInterface $checkLoginCommand */
         $checkLoginCommand = $this->loginService->checkLogin($token);
-        
+
         if ($checkLoginCommand->isError()) {
             $checkLoginCommand->execute($conn);
             return;
         }
-        
+
         if ($checkLoginCommand->isServer()) {
             $this->serverMessage($msg);
             return;
         }
-        
+
         if ($checkLoginCommand->isEquipament()) {
             /** @var EquipamentCommand $equipamentCommand */
             $equipamentCommand = $this->messageExtruderService->parseEquipmentMessage($msg);
-            
+
+            /** @var Closure $equipamentReflectionFunction */
             $equipamentReflectionFunction = $equipamentCommand->execute($this->clientServer);
+
+
             /** @var ActionCommand $actionCommandReflection */
             $actionCommandReflection = $equipamentReflectionFunction($this->reflections);
             $sendMessageToServerFunction = $actionCommandReflection->execute($this->extruderConnection);
@@ -189,20 +191,23 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
     private function serverMessage(string $msg): void
     {
         $setupCommands = $this->serverMessageService->parseServerSetupMessage($msg);
+
         array_walk($setupCommands, function ($setupCommand) {
             /** @var SetupCommand $setupCommand */
             $setupCommand->execute($this->extruderConnection);
         });
         
+        /** @var CommandInterface[] $actionCommands */
         $actionCommands = $this->serverMessageService->parseServerActionMessage($msg);
         if (!empty($actionCommands)) {
             $this->actionCommands = $actionCommands;
         }
-        
+
         /** @var InitCommand $initCommand */
         $initCommand = $this->serverMessageService->parseServerInitMessage($msg);
+        /** @var Closure[] $addReflectionFunctions */
         $addReflectionFunctions = $initCommand->executeActionCommands($this->extruderConnection, $this->actionCommands);
-        
+
         if (empty($addReflectionFunctions)) {
             return;
         }
@@ -211,10 +216,15 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
             $addReflection($this->reflections);
         });
         
-        $initCommand->addTimePeriod($this->loop, function () {
+        $timePeriod = $initCommand->addTimePeriod($this->loop, function () {
             array_walk($this->sendMessageToServerFunctions, function (Closure $sendMessageToServer): void {
                 $sendMessageToServer($this->clientServer);
             });
+        });
+        
+        $initCommand->addEndTime($this->loop, function () use ($timePeriod) {
+            $this->loop->cancelTimer($timePeriod);
+            echo "timer cancelado";
         });
     }
 }

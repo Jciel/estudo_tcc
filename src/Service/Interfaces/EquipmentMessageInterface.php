@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace App\Service;
+namespace App\Service\Interfaces;
 
-use App\Command\CommandInterface;
+use App\Command\Interfaces\CommandInterface;
 
 /**
  * Interface EquipmentMessageInterface

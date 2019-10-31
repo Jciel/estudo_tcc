@@ -3,12 +3,14 @@
 namespace App\Service;
 
 use App\Command\ActionCommand;
-use App\Command\CommandInterface;
 use App\Command\Factory\CommandFactory;
 use App\Command\InitCommand;
+use App\Command\Interfaces\CommandInterface;
 use App\Command\PinType\Factory\PinFactory;
-use App\Command\PinType\PinInterface;
+use App\Command\PinType\Interfaces\PinInterface;
 use App\Command\SetupCommand;
+use App\Service\Interfaces\ServerMessageInterface;
+use App\Service\Interfaces\ServiceInterface;
 
 /**
  * Class ServerMessageService
@@ -22,12 +24,12 @@ class ServerMessageService implements ServerMessageInterface, ServiceInterface
      */
     public function parseServerSetupMessage(string $msg): array
     {
-        $msgArray = json_decode($msg, true);
+        $msgArray = json_decode($msg, true) ?? [];
         
         if (!array_key_exists('setup', $msgArray)) {
             return [];
         }
-        
+
         return array_map(function ($setupCommand) {
             $pin = PinFactory::create($setupCommand['tipo'], $setupCommand['pino']);
             if ($setupCommand['acao'] === 'TEMP') {
@@ -43,7 +45,7 @@ class ServerMessageService implements ServerMessageInterface, ServiceInterface
      */
     public function parseServerActionMessage(string $msg): array
     {
-        $msgArray = json_decode($msg, true);
+        $msgArray = json_decode($msg, true) ?? [];
 
         if (!array_key_exists('acoes', $msgArray)) {
             return [];
@@ -61,7 +63,7 @@ class ServerMessageService implements ServerMessageInterface, ServiceInterface
      */
     public function parseServerInitMessage(string $msg): CommandInterface
     {
-        $msgArray = json_decode($msg, true);
+        $msgArray = json_decode($msg, true) ?? [];
 
         if (!array_key_exists('inicio', $msgArray)) {
             return CommandFactory::create(CommandFactory::ANONIMOUS_INIT_COMMAND, []);

@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace App\Command\PinType;
+namespace App\Command\PinType\Interfaces;
 
 /**
- * Interface AnalogicPinInterface
+ * Interface PinInterface
  * @package App\Command\PinType
  */
-interface AnalogicPinInterface
+interface PinInterface
 {
     /**
      * @return int

@@ -3,10 +3,12 @@
 namespace App\Service;
 
 use App\Command\ActionCommand;
-use App\Command\CommandInterface;
 use App\Command\EquipamentCommand;
 use App\Command\Factory\CommandFactory;
+use App\Command\Interfaces\CommandInterface;
 use App\Command\PinType\Factory\PinFactory;
+use App\Service\Interfaces\EquipmentMessageInterface;
+use App\Service\Interfaces\ServiceInterface;
 use Ratchet\ConnectionInterface;
 
 class MessageExtruderService implements EquipmentMessageInterface, ServiceInterface
@@ -18,6 +20,7 @@ class MessageExtruderService implements EquipmentMessageInterface, ServiceInterf
     public function parseEquipmentMessage(string $msg): CommandInterface
     {
         $equipamentMessageArray = explode('/', preg_replace("/[\/]+/", '/', $msg));
+
         $pin = (int)$equipamentMessageArray[2];
         $value = (int)$equipamentMessageArray[3];
 

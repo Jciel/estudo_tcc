@@ -2,7 +2,8 @@
 
 namespace App\Command;
 
-use App\Command\PinType\PinInterface;
+use App\Command\Interfaces\CommandInterface;
+use App\Command\PinType\Interfaces\PinInterface;
 use Closure;
 use Ratchet\ConnectionInterface;
 

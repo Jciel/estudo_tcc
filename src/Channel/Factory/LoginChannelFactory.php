@@ -2,7 +2,7 @@
 
 namespace App\Channel\Factory;
 
-use App\Channel\ChannelInterface;
+use App\Channel\Interfaces\ChannelInterface;
 use App\Channel\LoginChannel;
 use App\Service\LoginService;
 use App\ServiceManagerInterface;

@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Service\Interfaces\ServiceInterface;
 use Firebase\JWT\JWT;
 
 /**

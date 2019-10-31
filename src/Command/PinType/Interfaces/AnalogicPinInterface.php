@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace App\Command\PinType;
+namespace App\Command\PinType\Interfaces;
 
 /**
- * Interface DigitalPinInterface
+ * Interface AnalogicPinInterface
  * @package App\Command\PinType
  */
-interface DigitalPinInterface
+interface AnalogicPinInterface
 {
     /**
      * @return int

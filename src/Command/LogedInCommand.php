@@ -2,6 +2,8 @@
 
 namespace App\Command;
 
+use App\Command\Interfaces\CommandErrorInterface;
+use App\Command\Interfaces\CommandInterface;
 use Ratchet\ConnectionInterface;
 
 /**

@@ -3,16 +3,16 @@
 namespace App\Command\Factory;
 
 use App\Command\ActionCommand;
-use App\Command\CommandInterface;
+use App\Command\EmptyCommand;
+use App\Command\EmptyInitCommand;
 use App\Command\ErrorCommand;
 use App\Command\InitCommand;
+use App\Command\Interfaces\CommandInterface;
 use App\Command\LogedInCommand;
 use App\Command\LoginCloseCommand;
 use App\Command\OpenedLogin;
 use App\Command\SetupCommand;
 use Closure;
-use Ratchet\ConnectionInterface;
-use React\EventLoop\LoopInterface;
 
 /**
  * Class CommandFactory
@@ -30,8 +30,6 @@ class CommandFactory
      */
     public static function create(string $type, array $commandsArgs = []): CommandInterface
     {
-//        extract($commandsArgs);
-        
         $commands = [
             OpenedLogin::class => function () {
                 return new OpenedLogin();
@@ -55,30 +53,10 @@ class CommandFactory
                 return new SetupCommand($pin, $action);
             },
             self::ANONIMOUS_INIT_COMMAND => function () {
-                return new class implements CommandInterface {
-                    public function executeActionCommands(ConnectionInterface $conn, array $actionCommands): void
-                    {
-                    }
-                    public function addTimePeriod(LoopInterface $loop, Closure $callback): void
-                    {
-                    }
-                    public function execute(ConnectionInterface $conn): void
-                    {
-                    }
-                };
+                return new EmptyInitCommand();
             },
             self::ANONIMOUS_COMMAND => function (Closure $reflection) {
-                return new class($reflection) implements CommandInterface {
-                    private $reflection;
-                    public function __construct(Closure $reflection)
-                    {
-                        $this->reflection = $reflection;
-                    }
-                    public function execute(ConnectionInterface $conn): Closure
-                    {
-                        return $this->reflection;
-                    }
-                };
+                return new EmptyCommand($reflection);
             }
         ];
         
