@@ -94,10 +94,15 @@ class ExtruderChannel implements MessageComponentInterface, ChannelInterface
      */
     public function onOpen(ConnectionInterface $conn): void
     {
+
         $token = $this->getToken($conn->httpRequest);
 
         /** @var CommandErrorInterface|CommandConnectionInterface|CommandInterface $tokenData */
         $tokenData = $this->loginService->checkLogin($token);
+
+
+        var_dump($tokenData);
+
         
         if ($tokenData->isError()) {
             $tokenData->execute($conn);

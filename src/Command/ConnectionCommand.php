@@ -72,7 +72,7 @@ class ConnectionCommand implements CommandInterface, CommandConnectionInterface,
     public function __construct(
         string $message,
         int $iat,
-        int $exp,
+        $exp,
         int $nbf,
         string $user,
         string $type,

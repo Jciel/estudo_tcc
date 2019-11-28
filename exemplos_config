@@ -1,0 +1,72 @@
+{
+    "setup": [
+        {
+            "pino": 1,
+            "acao": "INPUT",
+            "tipo": "digital"
+        },
+        {
+            "pino": 2,
+            "acao": "OUTPUT",
+            "tipo": "digital"
+        },
+        {
+            "pino": 8,
+            "acao": "TEMP",
+            "tipo": "digital"
+        },
+        {
+            "pino": 9,
+            "acao": "MOTOR",
+            "tipo": "analogico"
+        },
+        {
+            "pino": 12,
+            "acao": "OUTPUT",
+            "tipo": "digital"
+        }
+    ]
+}
+
+
+{
+    "acoes": [
+        {
+            "pino": 1,
+            "acao": 70,
+            "tipo": "analogico"
+        },
+        {
+            "pino": 2,
+            "acao": "HIGH",
+            "tipo": "digital"
+        },
+        {
+            "pino": 3,
+            "acao": "LOW",
+            "tipo": "digital"
+        },
+        {
+            "pino":8,
+            "acao":70,
+            "tipo": "analogico",
+            "reflexo" : {
+                "pino":12,
+                "alto":"HIGH",
+                "baixo":"LOW",
+                "tipo": "digital"
+            }
+        }
+    ]
+}
+
+
+{
+    "inicio": {
+        "tempointervalo": 1,
+        "tempototal": 30
+    }
+}
+
+
+exemplo de mensagem do equipamento: alp://ared/12/30
